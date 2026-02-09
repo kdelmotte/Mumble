@@ -25,22 +25,7 @@ struct OnboardingCompleteView: View {
             // Warning + action if accessibility is missing
             if !viewModel.permissionManager.accessibilityGranted {
                 accessibilityWarning
-                Spacer().frame(height: 24)
-            } else {
-                Spacer().frame(height: 8)
             }
-
-            // Complete button
-            Button(action: {
-                viewModel.completeOnboarding()
-            }) {
-                Text("Start Mumbling")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
         }
     }
 

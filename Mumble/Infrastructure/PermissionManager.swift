@@ -77,17 +77,9 @@ final class PermissionManager: ObservableObject {
         accessibilityGranted = AXIsProcessTrusted()
     }
 
-    /// Prompts the user to grant Accessibility access by showing the system dialog.
+    /// Opens System Settings directly to the Accessibility pane, skipping the TCC modal.
     func requestAccessibilityPermission() {
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-        let trusted = AXIsProcessTrustedWithOptions(options)
-        accessibilityGranted = trusted
-        // Re-activate after a short delay so the app window comes back
-        // to the foreground when the user returns from System Settings.
-        Task { @MainActor in
-            try? await Task.sleep(for: .seconds(0.5))
-            NSApp.activate(ignoringOtherApps: true)
-        }
+        openAccessibilitySettings()
     }
 
     /// Opens System Settings to the Accessibility privacy pane.

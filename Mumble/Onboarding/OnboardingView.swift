@@ -103,8 +103,19 @@ struct OnboardingView: View {
 
             Spacer()
 
-            // Continue button (hidden on last step, the complete button is in the view itself)
-            if !viewModel.isLastStep {
+            if viewModel.isLastStep {
+                Button(action: {
+                    viewModel.completeOnboarding()
+                }) {
+                    HStack(spacing: 4) {
+                        Text("Start Mumbling")
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.regular)
+            } else {
                 Button(action: {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         viewModel.goToNextStep()
@@ -119,9 +130,6 @@ struct OnboardingView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.regular)
                 .disabled(!viewModel.canProceedFromStep(viewModel.currentStep))
-            } else {
-                Spacer()
-                    .frame(width: 90)
             }
         }
     }
