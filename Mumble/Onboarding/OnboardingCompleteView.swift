@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - OnboardingCompleteView (Step 4)
+// MARK: - OnboardingCompleteView (Step 5)
 
 struct OnboardingCompleteView: View {
 
@@ -77,13 +77,19 @@ struct OnboardingCompleteView: View {
 
     // MARK: - Summary Card
 
+    private var toneSummaryValue: String {
+        let personal = viewModel.toneMappingConfig.tone(for: .personal).displayName
+        let work = viewModel.toneMappingConfig.tone(for: .work).displayName
+        return "Personal: \(personal), Work: \(work)"
+    }
+
     private var summaryCard: some View {
         VStack(spacing: 0) {
             summaryRow(
                 icon: "fn",
                 iconColor: .accentColor,
                 title: "Trigger",
-                value: "Hold Fn to dictate",
+                value: "Hold \(viewModel.currentShortcut.displayString) to dictate",
                 isSystemIcon: false
             )
 
@@ -115,6 +121,15 @@ struct OnboardingCompleteView: View {
                 title: "API Key",
                 value: "Configured",
                 statusColor: .green
+            )
+
+            Divider().padding(.leading, 54)
+
+            summaryRow(
+                icon: "textformat",
+                iconColor: .teal,
+                title: "Tone",
+                value: toneSummaryValue
             )
 
             Divider().padding(.leading, 54)

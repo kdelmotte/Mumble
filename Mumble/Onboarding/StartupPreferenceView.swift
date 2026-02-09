@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - StartupPreferenceView (Step 3)
+// MARK: - StartupPreferenceView (Step 4)
 
 struct StartupPreferenceView: View {
 
@@ -65,6 +65,18 @@ struct StartupPreferenceView: View {
                     .foregroundStyle(.secondary)
 
                 Text("Mumble runs quietly in your menu bar. It uses minimal resources when idle.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+
+            Divider()
+
+            HStack(spacing: 10) {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+
+                Text("You can change this later in Settings.")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }

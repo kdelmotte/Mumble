@@ -52,6 +52,10 @@ final class AudioRecorder: ObservableObject {
     /// Drive a waveform / level-meter visualisation from this value.
     @Published private(set) var audioLevel: Float = 0.0
 
+    /// Peak audio level observed during the current (or most recent) recording session.
+    /// Read this after `stopRecording()` to determine if the recording contained speech.
+    private(set) var peakAudioLevel: Float = 0.0
+
     // MARK: Private Properties
 
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.mumble", category: "AudioRecorder")
@@ -187,6 +191,7 @@ final class AudioRecorder: ObservableObject {
         guard !isRecording else { return }
 
         pcmBuffers.removeAll()
+        peakAudioLevel = 0.0
 
         let engine = AVAudioEngine()
         self.audioEngine = engine
@@ -273,6 +278,7 @@ final class AudioRecorder: ObservableObject {
 
                 Task { @MainActor [weak self] in
                     self?.pcmBuffers.append(data)
+                    self?.peakAudioLevel = max(self?.peakAudioLevel ?? 0, level)
                     let smoothed = (self?.audioLevel ?? 0) * (1 - (self?.levelSmoothing ?? 0.3))
                         + level * (self?.levelSmoothing ?? 0.3)
                     self?.audioLevel = smoothed

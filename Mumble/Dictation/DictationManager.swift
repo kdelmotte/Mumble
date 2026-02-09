@@ -207,6 +207,17 @@ final class DictationManager: ObservableObject {
         // 1. Stop recording and retrieve the audio data.
         let audioData = audioRecorder.stopRecording()
 
+        // 1a. Skip transcription if the recording was silent (prevents Whisper hallucinations).
+        if audioRecorder.peakAudioLevel < 0.01 {
+            audioLevelCancellable?.cancel()
+            audioLevelCancellable = nil
+            soundPlayer.playEndSound()
+            isDictating = false
+            logger.info("DictationManager: silent recording, skipping transcription")
+            hud.hide()
+            return
+        }
+
         // 2. Stop forwarding audio levels.
         audioLevelCancellable?.cancel()
         audioLevelCancellable = nil

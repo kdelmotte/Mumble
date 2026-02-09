@@ -15,7 +15,9 @@
 		2B7C67BF0DA9BEFD167D9DAF /* HomeTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D59DEB149D775F191EE556 /* HomeTabView.swift */; };
 		2F4217DBCDAAAB068B1E6A39 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C65E992585E5FD5BE7B2CE10 /* OnboardingView.swift */; };
 		421E90002B795DB44C82BE8B /* TranscriptionParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 784B6DD36ECB1754CA10EEA0 /* TranscriptionParserTests.swift */; };
+		45C8EE9E862220FBFAEF403F /* ShortcutSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C12F9978477313B39AA0DD1 /* ShortcutSetupView.swift */; };
 		464FA7DC41736B0B66FD442B /* StartupPreferenceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8315B492BC2A8377EBE6380F /* StartupPreferenceView.swift */; };
+		4900C748B9DDDD11B6640600 /* ToneSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC31C5BA1C432FDC074B278 /* ToneSetupView.swift */; };
 		4CEA109AF0432BA2B71843F2 /* DictationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DACC205211D4B52482F6F602 /* DictationManager.swift */; };
 		4D16D4EB8D26916E66A027DA /* PermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4D62FE94608BCC954854C6 /* PermissionManager.swift */; };
 		4EA4A8445D46A8581A851406 /* PermissionsCheckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534DDCBEA775C833096DEB02 /* PermissionsCheckView.swift */; };
@@ -78,6 +80,7 @@
 		647ADAA51F8E8D8761F64590 /* AudioWaveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioWaveView.swift; sourceTree = "<group>"; };
 		677E97A6B332076DF0419B42 /* MumbleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MumbleApp.swift; sourceTree = "<group>"; };
 		69F45C367130A6546FD3E403 /* ToneMappingConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneMappingConfigTests.swift; sourceTree = "<group>"; };
+		6EC31C5BA1C432FDC074B278 /* ToneSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneSetupView.swift; sourceTree = "<group>"; };
 		70C4F7FB5626BC535314179F /* ToneProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneProfile.swift; sourceTree = "<group>"; };
 		75D59DEB149D775F191EE556 /* HomeTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTabView.swift; sourceTree = "<group>"; };
 		77531A7C3F3E1ADED5BBE849 /* AppContextDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContextDetectorTests.swift; sourceTree = "<group>"; };
@@ -86,6 +89,7 @@
 		8315B492BC2A8377EBE6380F /* StartupPreferenceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupPreferenceView.swift; sourceTree = "<group>"; };
 		871FF303988D2B12F6E07515 /* TranscriptionModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionModels.swift; sourceTree = "<group>"; };
 		87B4178128C9318330DCC650 /* SoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPlayer.swift; sourceTree = "<group>"; };
+		8C12F9978477313B39AA0DD1 /* ShortcutSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutSetupView.swift; sourceTree = "<group>"; };
 		8E04DB5EFE4532DE032B8384 /* ToneTransformerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneTransformerTests.swift; sourceTree = "<group>"; };
 		8EE95F7B9008235FDBF30003 /* AppContextDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContextDetector.swift; sourceTree = "<group>"; };
 		9CA9FE562B2261B460CBCAF0 /* SettingsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTabView.swift; sourceTree = "<group>"; };
@@ -229,7 +233,9 @@
 				C65E992585E5FD5BE7B2CE10 /* OnboardingView.swift */,
 				C8568E174838B9238266C523 /* OnboardingViewModel.swift */,
 				534DDCBEA775C833096DEB02 /* PermissionsCheckView.swift */,
+				8C12F9978477313B39AA0DD1 /* ShortcutSetupView.swift */,
 				8315B492BC2A8377EBE6380F /* StartupPreferenceView.swift */,
+				6EC31C5BA1C432FDC074B278 /* ToneSetupView.swift */,
 			);
 			path = Onboarding;
 			sourceTree = "<group>";
@@ -369,12 +375,14 @@
 				6203291560890A2D7523BB9C /* SettingsViewModel.swift in Sources */,
 				158D56FAB364DB87EC553AFD /* ShortcutBinding.swift in Sources */,
 				D68106A2756E8FDA1FAAC378 /* ShortcutMonitor.swift in Sources */,
+				45C8EE9E862220FBFAEF403F /* ShortcutSetupView.swift in Sources */,
 				C10F4A83DB5375A94BDB2C84 /* ShortcutTabView.swift in Sources */,
 				72B687071816C1CB0CFE0C33 /* SoundPlayer.swift in Sources */,
 				464FA7DC41736B0B66FD442B /* StartupPreferenceView.swift in Sources */,
 				E076D4CD072B59DD08BB73E6 /* TextInserter.swift in Sources */,
 				D4DE5A6E62EE40D362B2A127 /* ToneMappingConfig.swift in Sources */,
 				8C05A7CA87CAF556CDD99DF1 /* ToneProfile.swift in Sources */,
+				4900C748B9DDDD11B6640600 /* ToneSetupView.swift in Sources */,
 				AE7A41D0C7B086A4D44D0A65 /* ToneTabView.swift in Sources */,
 				CC30C3A2C51667B1DA917407 /* ToneTransformer.swift in Sources */,
 				DA959B628C5F17050AF84727 /* TranscriptionModels.swift in Sources */,

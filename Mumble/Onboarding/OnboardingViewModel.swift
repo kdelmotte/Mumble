@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import SwiftUI
 import Combine
 
 // MARK: - Key Test Result
@@ -33,6 +34,32 @@ final class OnboardingViewModel: ObservableObject {
     @Published var keyTestResult: KeyTestResult?
     @Published var launchAtLogin: Bool = true
 
+    // MARK: - Shortcut State
+
+    @Published var currentShortcut: ShortcutBinding = .load()
+
+    // MARK: - Shortcut Recording
+
+    private var recordingMonitors: [Any] = []
+    private var recordingCompletion: (() -> Void)?
+    private var peakModifierFlags: NSEvent.ModifierFlags = []
+    private var sawKeyDown = false
+
+    // MARK: - Tone Config State
+
+    @Published var toneMappingConfig: ToneMappingConfig = .load()
+
+    // MARK: - Demo State
+
+    @Published var demoText: String = ""
+    @Published var isDemoRecording: Bool = false
+    @Published var isDemoTranscribing: Bool = false
+    @Published var demoAudioLevel: Float = 0.0
+
+    private var demoShortcutMonitor: ShortcutMonitor?
+    private var demoAudioRecorder: AudioRecorder?
+    private var demoAudioLevelCancellable: AnyCancellable?
+
     // MARK: - Dependencies
 
     let permissionManager: PermissionManager
@@ -45,7 +72,7 @@ final class OnboardingViewModel: ObservableObject {
     private var apiKeyCancellable: AnyCancellable?
     private var validationTask: Task<Void, Never>?
 
-    static let totalSteps = 4
+    static let totalSteps = 6
 
     // MARK: - Init
 
@@ -113,9 +140,15 @@ final class OnboardingViewModel: ObservableObject {
             // API key step: require successful key test
             return keyTestResult == .success
         case 2:
-            // Startup preferences: always allowed
+            // Shortcut setup: optional config, always allowed
             return true
         case 3:
+            // Tone setup: optional config, always allowed
+            return true
+        case 4:
+            // Startup preferences: always allowed
+            return true
+        case 5:
             // Complete: always allowed
             return true
         default:
@@ -220,6 +253,13 @@ final class OnboardingViewModel: ObservableObject {
     // MARK: - Complete Onboarding
 
     func completeOnboarding() {
+        // Persist shortcut and tone settings
+        currentShortcut.save()
+        toneMappingConfig.save()
+
+        // Stop the demo monitor if still running
+        stopDemoListening()
+
         // Apply launch-at-login preference
         if launchAtLogin {
             loginItemManager.enable()
@@ -241,6 +281,199 @@ final class OnboardingViewModel: ObservableObject {
     /// Whether at least one permission is missing, used to show a warning on the permissions step.
     var hasPermissionWarning: Bool {
         !permissionManager.microphoneGranted || !permissionManager.accessibilityGranted
+    }
+
+    // MARK: - Shortcut Recording
+
+    func startRecordingShortcut(completion: @escaping () -> Void) {
+        removeRecordingMonitors()
+        recordingCompletion = completion
+        peakModifierFlags = []
+        sawKeyDown = false
+
+        if let flagsMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+            self?.handleRecordingFlagsChanged(event)
+            return nil
+        } {
+            recordingMonitors.append(flagsMonitor)
+        }
+
+        if let keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            self?.handleRecordingKeyDown(event)
+            return nil
+        } {
+            recordingMonitors.append(keyMonitor)
+        }
+    }
+
+    func cancelRecordingShortcut() {
+        removeRecordingMonitors()
+        let completion = recordingCompletion
+        recordingCompletion = nil
+        completion?()
+    }
+
+    func resetShortcutToDefault() {
+        ShortcutBinding.resetToDefault()
+        currentShortcut = .defaultFnKey
+    }
+
+    private func handleRecordingFlagsChanged(_ event: NSEvent) {
+        let flags = event.modifierFlags
+        let relevantFlags: NSEvent.ModifierFlags = [.command, .option, .control, .shift, .function]
+        let current = flags.intersection(relevantFlags)
+
+        if !current.isEmpty {
+            peakModifierFlags = peakModifierFlags.union(current)
+        } else if !peakModifierFlags.isEmpty && !sawKeyDown {
+            let binding = ShortcutBinding(
+                modifierFlagsRaw: peakModifierFlags.rawValue,
+                keyCode: nil
+            )
+            finalizeRecording(binding)
+        }
+    }
+
+    private func handleRecordingKeyDown(_ event: NSEvent) {
+        if event.keyCode == 53 {
+            cancelRecordingShortcut()
+            return
+        }
+
+        sawKeyDown = true
+
+        let relevantFlags: NSEvent.ModifierFlags = [.command, .option, .control, .shift, .function]
+        let modifiers = event.modifierFlags.intersection(relevantFlags)
+
+        let binding = ShortcutBinding(
+            modifierFlagsRaw: modifiers.rawValue,
+            keyCode: event.keyCode
+        )
+        finalizeRecording(binding)
+    }
+
+    private func finalizeRecording(_ binding: ShortcutBinding) {
+        removeRecordingMonitors()
+        currentShortcut = binding
+        binding.save()
+
+        let completion = recordingCompletion
+        recordingCompletion = nil
+        completion?()
+    }
+
+    private func removeRecordingMonitors() {
+        for monitor in recordingMonitors {
+            NSEvent.removeMonitor(monitor)
+        }
+        recordingMonitors.removeAll()
+    }
+
+    // MARK: - Tone Config
+
+    func toneBinding(for group: AppGroup) -> Binding<ToneProfile> {
+        Binding(
+            get: { [weak self] in
+                self?.toneMappingConfig.tone(for: group) ?? .casual
+            },
+            set: { [weak self] newTone in
+                self?.toneMappingConfig.setTone(newTone, for: group)
+                self?.toneMappingConfig.save()
+            }
+        )
+    }
+
+    // MARK: - Demo (Try It Here)
+
+    func startDemoListening() {
+        stopDemoListening()
+
+        let monitor = ShortcutMonitor(shortcut: currentShortcut)
+        demoShortcutMonitor = monitor
+
+        monitor.onShortcutDown = { [weak self] in
+            Task { @MainActor in
+                self?.startDemoRecording()
+            }
+        }
+
+        monitor.onShortcutUp = { [weak self] in
+            Task { @MainActor in
+                self?.stopDemoRecording()
+            }
+        }
+
+        monitor.startMonitoring()
+    }
+
+    func stopDemoListening() {
+        demoShortcutMonitor?.stopMonitoring()
+        demoShortcutMonitor = nil
+        demoAudioLevelCancellable?.cancel()
+        demoAudioLevelCancellable = nil
+        demoAudioRecorder = nil
+        isDemoRecording = false
+        isDemoTranscribing = false
+    }
+
+    func pauseDemoForRecording() {
+        demoShortcutMonitor?.stopMonitoring()
+    }
+
+    func resumeDemoAfterRecording() {
+        demoShortcutMonitor?.shortcut = currentShortcut
+        demoShortcutMonitor?.startMonitoring()
+    }
+
+    private func startDemoRecording() {
+        let recorder = AudioRecorder()
+        demoAudioRecorder = recorder
+
+        demoAudioLevelCancellable = recorder.$audioLevel
+            .receive(on: RunLoop.main)
+            .sink { [weak self] level in
+                self?.demoAudioLevel = level
+            }
+
+        do {
+            try recorder.startRecording()
+            isDemoRecording = true
+        } catch {
+            logger.warning("Demo recording failed to start: \(error.localizedDescription)")
+            demoAudioRecorder = nil
+            demoAudioLevelCancellable = nil
+        }
+    }
+
+    private func stopDemoRecording() {
+        guard let recorder = demoAudioRecorder else { return }
+        isDemoRecording = false
+        demoAudioLevel = 0.0
+        demoAudioLevelCancellable?.cancel()
+        demoAudioLevelCancellable = nil
+
+        guard let audioData = recorder.stopRecording() else {
+            demoAudioRecorder = nil
+            return
+        }
+        demoAudioRecorder = nil
+
+        guard let apiKey = keychainManager.getAPIKey(), !apiKey.isEmpty else {
+            demoText = "(No API key configured)"
+            return
+        }
+
+        isDemoTranscribing = true
+        Task {
+            do {
+                let text = try await transcriptionService.transcribe(audioData: audioData, apiKey: apiKey)
+                demoText = String(text.prefix(280))
+            } catch {
+                demoText = "(Transcription failed: \(error.localizedDescription))"
+                logger.warning("Demo transcription failed: \(error.localizedDescription)")
+            }
+            isDemoTranscribing = false
+        }
     }
 
 }

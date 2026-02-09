@@ -22,7 +22,7 @@ struct OnboardingView: View {
                 .padding(.horizontal, 32)
                 .padding(.vertical, 20)
         }
-        .frame(width: 520, height: 620)
+        .frame(width: 520, height: 700)
         .background(.background)
     }
 
@@ -44,12 +44,24 @@ struct OnboardingView: View {
                     removal: .move(edge: .leading).combined(with: .opacity)
                 ))
         case 2:
-            StartupPreferenceView(viewModel: viewModel)
+            ShortcutSetupView(viewModel: viewModel)
                 .transition(.asymmetric(
                     insertion: .move(edge: .trailing).combined(with: .opacity),
                     removal: .move(edge: .leading).combined(with: .opacity)
                 ))
         case 3:
+            ToneSetupView(viewModel: viewModel)
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal: .move(edge: .leading).combined(with: .opacity)
+                ))
+        case 4:
+            StartupPreferenceView(viewModel: viewModel)
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal: .move(edge: .leading).combined(with: .opacity)
+                ))
+        case 5:
             OnboardingCompleteView(viewModel: viewModel)
                 .transition(.asymmetric(
                     insertion: .move(edge: .trailing).combined(with: .opacity),
