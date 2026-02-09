@@ -1,0 +1,48 @@
+name: Mumble
+
+options:
+  bundleIdPrefix: com.mumble
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "15.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+
+targets:
+  Mumble:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: Mumble
+    info:
+      path: Mumble/Info.plist
+    entitlements:
+      path: Mumble/Mumble.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mumble.app
+        INFOPLIST_FILE: Mumble/Info.plist
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: 1
+        SWIFT_VERSION: "5.9"
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        CODE_SIGN_ENTITLEMENTS: Mumble/Mumble.entitlements
+        GENERATE_INFOPLIST_FILE: false
+
+  MumbleTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: MumbleTests
+    dependencies:
+      - target: Mumble
+    settings:
+      base:
+        SWIFT_VERSION: "5.9"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Mumble.app/Contents/MacOS/Mumble"
