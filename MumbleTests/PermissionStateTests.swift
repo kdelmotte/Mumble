@@ -1,6 +1,7 @@
 import XCTest
 @testable import Mumble
 
+@MainActor
 final class PermissionStateTests: XCTestCase {
 
     // MARK: - Initial State
