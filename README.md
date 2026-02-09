@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Talk to your Mac. It types back.</strong><br/>
-  A tiny menu bar app that turns your voice into text — instantly.
+  A tiny, <strong>completely free</strong> menu bar app that turns your voice into text — instantly.
 </p>
 
 <p align="center">
@@ -22,18 +22,28 @@ Because typing is overrated. Mumble sits quietly in your menu bar and lets you d
 
 Casual message to a friend? Mumble keeps it chill. Work email? Mumble cleans it up. You just talk.
 
+### Completely Free
+
+Mumble is powered by [Groq](https://groq.com)'s `whisper-large-v3-turbo` model — one of the fastest and most accurate speech-to-text models available. Groq's free tier requires **no credit card** and gives you:
+
+- **2,000 requests/day** — that's 2,000 individual dictations
+- **8 hours of audio/day** (28,800 seconds) — more than enough for all-day use
+- **20 requests/minute** — plenty for natural dictation
+
+Just grab a free API key from [console.groq.com](https://console.groq.com) and you're set. No subscriptions, no trials, no catch.
+
 ## What You Get
 
 - **Push-to-talk with Fn** — hold to record, release to transcribe. No clicking, no waiting.
 - **Instant text insertion** — transcribed text drops right into whatever app you're using.
 - **Context-aware tone** — Mumble detects the active app and adjusts formatting automatically.
-- **Blazing fast transcription** — powered by Groq's Whisper API (seriously, it's fast).
+- **Blazing fast transcription** — powered by Groq's `whisper-large-v3-turbo` (seriously, it's fast).
 - **Zero clutter** — lives in the menu bar, no Dock icon, no windows in your way.
 - **Guided setup** — onboarding walks you through API key, permissions, and preferences.
 
 ## Getting Started
 
-**You'll need:** macOS 14+ (Sonoma), Xcode 15+, and a free [Groq API key](https://console.groq.com/).
+**You'll need:** macOS 14+ (Sonoma), Xcode 15+, and a free [Groq API key](https://console.groq.com/) (no credit card required).
 
 ```bash
 brew install xcodegen          # one-time setup
