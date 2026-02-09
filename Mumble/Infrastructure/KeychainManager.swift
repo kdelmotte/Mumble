@@ -72,11 +72,7 @@ final class KeychainManager {
     }
 
     /// Retrieves the stored API key from the Keychain, or `nil` if none exists.
-    ///
-    /// If the key is not found in the Data Protection keychain, falls back to the
-    /// legacy keychain and migrates the item automatically.
     func getAPIKey() -> String? {
-        // Try the Data Protection keychain first (new default).
         var query = baseQuery()
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
@@ -84,28 +80,11 @@ final class KeychainManager {
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
 
-        if status == errSecSuccess, let data = result as? Data {
-            return String(data: data, encoding: .utf8)
-        }
-
-        // Fall back to the legacy keychain for existing users.
-        var legacyQuery = legacyBaseQuery()
-        legacyQuery[kSecReturnData as String] = true
-        legacyQuery[kSecMatchLimit as String] = kSecMatchLimitOne
-
-        var legacyResult: AnyObject?
-        let legacyStatus = SecItemCopyMatching(legacyQuery as CFDictionary, &legacyResult)
-
-        guard legacyStatus == errSecSuccess, let legacyData = legacyResult as? Data,
-              let key = String(data: legacyData, encoding: .utf8) else {
+        guard status == errSecSuccess, let data = result as? Data else {
             return nil
         }
 
-        // Migrate: save to Data Protection keychain, then delete from legacy.
-        try? saveAPIKey(key)
-        SecItemDelete(legacyBaseQuery() as CFDictionary)
-
-        return key
+        return String(data: data, encoding: .utf8)
     }
 
     /// Deletes the stored API key from the Keychain.
@@ -121,16 +100,6 @@ final class KeychainManager {
     // MARK: - Private Helpers
 
     private func baseQuery() -> [String: Any] {
-        [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecUseDataProtectionKeychain as String: true
-        ]
-    }
-
-    /// Query targeting the legacy file-based keychain (without Data Protection flag).
-    private func legacyBaseQuery() -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
