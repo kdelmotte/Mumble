@@ -1,119 +1,92 @@
-# Mumble
+<p align="center">
+  <img src="Mumble/Resources/Assets.xcassets/AppIcon.appiconset/icon_256x256.png" width="128" height="128" alt="Mumble icon" />
+</p>
 
-A lightweight macOS menu bar app for push-to-talk speech-to-text using Groq's Whisper API.
+<h1 align="center">Mumble</h1>
 
-## Features
+<p align="center">
+  <strong>Talk to your Mac. It types back.</strong><br/>
+  A tiny menu bar app that turns your voice into text — instantly.
+</p>
 
-- **Push-to-talk dictation** -- hold the Fn key to record, release to transcribe and insert text
-- **Menu bar app** -- lives in the menu bar, stays out of your way
-- **Context-aware transcription** -- detects the active application and adjusts formatting
-- **Tone transformation** -- automatically adjusts tone (casual, professional, etc.) based on context
-- **Groq Whisper API** -- fast, accurate transcription powered by Groq's hosted Whisper model
-- **Guided onboarding** -- step-by-step setup for API key, permissions, and preferences
-- **Direct text insertion** -- transcribed text is inserted directly at your cursor position
+<p align="center">
+  Hold <kbd>Fn</kbd> &rarr; speak &rarr; release &rarr; text appears at your cursor.
+  <br/>That's it. That's the app.
+</p>
 
-## Requirements
+---
 
-- macOS 14.0 (Sonoma) or later
-- Xcode 15.0 or later
-- A [Groq API key](https://console.groq.com/) (free tier available)
+## Why Mumble?
 
-## Setup
+Because typing is overrated. Mumble sits quietly in your menu bar and lets you dictate into **any** text field on macOS. It figures out where you are — Slack, email, iMessage, a Google Doc — and adjusts the tone to match.
 
-1. **Install XcodeGen** (if not already installed):
+Casual message to a friend? Mumble keeps it chill. Work email? Mumble cleans it up. You just talk.
 
-   ```bash
-   brew install xcodegen
-   ```
+## What You Get
 
-2. **Generate the Xcode project**:
+- **Push-to-talk with Fn** — hold to record, release to transcribe. No clicking, no waiting.
+- **Instant text insertion** — transcribed text drops right into whatever app you're using.
+- **Context-aware tone** — Mumble detects the active app and adjusts formatting automatically.
+- **Blazing fast transcription** — powered by Groq's Whisper API (seriously, it's fast).
+- **Zero clutter** — lives in the menu bar, no Dock icon, no windows in your way.
+- **Guided setup** — onboarding walks you through API key, permissions, and preferences.
 
-   ```bash
-   cd /path/to/Mumble
-   xcodegen generate
-   ```
+## Getting Started
 
-3. **Open the project**:
+**You'll need:** macOS 14+ (Sonoma), Xcode 15+, and a free [Groq API key](https://console.groq.com/).
 
-   ```bash
-   open Mumble.xcodeproj
-   ```
-
-4. **Build and run** with Cmd+R.
-
-5. **Follow the onboarding flow** to configure your Groq API key and grant the required permissions (Accessibility and Microphone).
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────┐
-│                    MumbleApp                        │
-│  ┌──────────┐  ┌────────────┐  ┌──────────────────┐ │
-│  │Onboarding│  │ MenuBar    │  │   Settings       │ │
-│  └────┬─────┘  └─────┬──────┘  └────────┬─────────┘ │
-│       └──────────────┼───────────────────┘           │
-│                      ▼                               │
-│              DictationManager                        │
-│       ┌──────┬───────┼───────┬──────┐               │
-│       ▼      ▼       ▼       ▼      ▼               │
-│  FnKey   Audio    Groq API  Context  Text           │
-│  Monitor Recorder  Service  Detector Inserter       │
-│                      │                               │
-│                      ▼                               │
-│              ToneTransformer                         │
-└─────────────────────────────────────────────────────┘
+```bash
+brew install xcodegen          # one-time setup
+cd /path/to/Mumble
+xcodegen generate              # generate the Xcode project
+open Mumble.xcodeproj          # Cmd+R to build and run
 ```
 
-- **MumbleApp** -- the SwiftUI app entry point, manages the menu bar presence
-- **Onboarding** -- guides the user through initial setup (API key, permissions)
-- **MenuBar** -- the menu bar icon and popover UI
-- **Settings** -- preferences for API key, tone, and behavior
-- **DictationManager** -- orchestrates the full dictation lifecycle
-- **FnKey Monitor** -- listens for global Fn key press/release events
-- **Audio Recorder** -- captures microphone audio into a buffer
-- **Groq API Service** -- sends audio to Groq's Whisper endpoint for transcription
-- **Context Detector** -- identifies the active app and text field context
-- **Text Inserter** -- inserts transcribed text at the cursor via accessibility APIs
-- **ToneTransformer** -- adjusts transcription tone based on context rules
+The app will walk you through the rest.
+
+## How It Works
+
+```
+    You speak        Mumble listens       Groq transcribes       Text appears
+  ┌──────────┐      ┌─────────────┐      ┌────────────────┐     ┌───────────┐
+  │ Hold Fn  │ ──▶  │  Record mic │ ──▶  │  Whisper API   │ ──▶ │ At cursor │
+  └──────────┘      └─────────────┘      └────────────────┘     └───────────┘
+                                                │
+                                                ▼
+                                      ┌──────────────────┐
+                                      │ Tone Transformer  │
+                                      │ (casual? formal?) │
+                                      └──────────────────┘
+```
+
+Under the hood: **DictationManager** orchestrates everything — shortcut monitoring, audio recording, Groq API transcription, tone transformation, and text insertion via Accessibility APIs.
 
 ## Troubleshooting
 
-### Fn key not working
+| Problem | Fix |
+|---|---|
+| **Fn key not working** | System Settings > Keyboard > set "Press fn key to" → **Do Nothing** |
+| **No accessibility permission** | System Settings > Privacy & Security > Accessibility > enable Mumble |
+| **No microphone permission** | System Settings > Privacy & Security > Microphone > enable Mumble |
+| **Text not inserting** | Make sure a text field is focused in the target app before recording |
 
-The Fn key behavior depends on your system keyboard settings. Open **System Settings > Keyboard** and check what "Press fn key to" is set to. If it is set to "Change Input Source" or another action, it may interfere with Mumble's key monitoring. Set it to "Do Nothing" for best results.
-
-### Accessibility permission not granted
-
-Mumble requires Accessibility permission to monitor the Fn key globally and to insert text into other applications. Go to **System Settings > Privacy & Security > Accessibility** and ensure Mumble is listed and enabled. If you moved or rebuilt the app, you may need to remove the old entry and re-add it.
-
-### Microphone permission not granted
-
-Mumble needs microphone access to record audio for transcription. Go to **System Settings > Privacy & Security > Microphone** and ensure Mumble is enabled. If you denied the permission on first launch, you will need to enable it manually here.
-
-### Text not being inserted
-
-Text insertion uses the macOS Accessibility API. Make sure:
-1. Accessibility permission is granted (see above).
-2. The target application supports text insertion via accessibility (most standard text fields do).
-3. You have a focused text field in the target application before recording.
+> Rebuilt or moved the app? You may need to remove the old Accessibility entry and re-add it.
 
 ## Known Limitations
 
-- **Fn key conflicts** -- On some keyboards or with certain system settings, the Fn key may be intercepted by macOS before Mumble can detect it.
-- **Browser URL detection** -- Detecting the current URL in browsers requires Accessibility permission and may not work with all browsers or browser configurations.
-- **No offline mode** -- Transcription requires an internet connection to reach the Groq API. There is no local fallback.
-- **Fn key only** -- Currently only the Fn key is supported as the push-to-talk trigger. Custom hotkeys are not yet available.
+- Fn key can conflict with certain macOS keyboard settings
+- Browser URL detection doesn't work with all browsers
+- Requires an internet connection (no offline fallback yet)
+- Only Fn key is supported for now (custom hotkeys coming soon)
 
-## Future Enhancements
+## On the Roadmap
 
-These features are planned but not yet implemented:
-
-- **Custom hotkey support** -- allow users to choose their own push-to-talk key or key combination
-- **Multiple language support** -- transcribe in languages other than English
-- **Local Whisper model fallback** -- use a local Whisper model when offline or for privacy
-- **Custom tone profiles** -- let users define their own tone transformation rules
-- **Clipboard history integration** -- keep a history of recent transcriptions accessible from the menu bar
+- Custom hotkey support
+- Multi-language transcription
+- Local Whisper model for offline use
+- User-defined tone profiles
+- Clipboard history for recent transcriptions
 
 ## License
 
-This project is private and not yet licensed for distribution.
+See [LICENSE](LICENSE) for details.
