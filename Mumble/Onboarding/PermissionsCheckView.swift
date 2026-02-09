@@ -11,12 +11,12 @@ struct PermissionsCheckView: View {
             // Header
             headerSection
 
-            Spacer().frame(height: 32)
+            Spacer().frame(height: 20)
 
             // Privacy note
             privacyNote
 
-            Spacer().frame(height: 28)
+            Spacer().frame(height: 20)
 
             // Permission rows
             VStack(spacing: 16) {
@@ -39,10 +39,9 @@ struct PermissionsCheckView: View {
                 )
             }
 
-            Spacer().frame(height: 24)
-
             // Warning if permissions are missing
             if viewModel.hasPermissionWarning {
+                Spacer().frame(height: 16)
                 permissionWarning
             }
 
@@ -57,7 +56,7 @@ struct PermissionsCheckView: View {
             Image("MumbleIconPermissions")
                 .resizable()
                 .scaledToFit()
-                .frame(height: 160)
+                .frame(height: 120)
 
             Text("Welcome to Mumble")
                 .font(.title.bold())
