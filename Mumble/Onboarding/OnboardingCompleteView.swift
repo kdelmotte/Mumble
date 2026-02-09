@@ -15,12 +15,12 @@ struct OnboardingCompleteView: View {
             // Header
             headerSection
 
-            Spacer().frame(height: 32)
+            Spacer().frame(height: 20)
 
             // Summary card
             summaryCard
 
-            Spacer().frame(height: 24)
+            Spacer().frame(height: 16)
 
             // Warning + action if accessibility is missing
             if !viewModel.permissionManager.accessibilityGranted {
@@ -34,15 +34,13 @@ struct OnboardingCompleteView: View {
             Button(action: {
                 viewModel.completeOnboarding()
             }) {
-                Text("Start Using Mumble")
+                Text("Start Mumbling")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-
-            Spacer()
         }
     }
 
@@ -53,7 +51,7 @@ struct OnboardingCompleteView: View {
             Image("MumbleIconSettings")
                 .resizable()
                 .scaledToFit()
-                .frame(height: 120)
+                .frame(height: 80)
 
             if allPermissionsGranted {
                 Text("You're all set!")
