@@ -48,6 +48,7 @@ final class DictationManager: ObservableObject {
     private let keychainManager: KeychainManager
     private let permissionManager: PermissionManager
     private let toneTransformer: ToneTransformer
+    private let llmFormattingService: LLMFormattingService
     private let hud: DictationHUD
 
     private let logger = STTLogger.shared
@@ -74,6 +75,7 @@ final class DictationManager: ObservableObject {
         keychainManager: KeychainManager = .shared,
         permissionManager: PermissionManager? = nil,
         toneTransformer: ToneTransformer = ToneTransformer(),
+        llmFormattingService: LLMFormattingService = .shared,
         hud: DictationHUD? = nil
     ) {
         self.shortcutMonitor = shortcutMonitor
@@ -85,6 +87,7 @@ final class DictationManager: ObservableObject {
         self.keychainManager = keychainManager
         self.permissionManager = permissionManager ?? PermissionManager()
         self.toneTransformer = toneTransformer
+        self.llmFormattingService = llmFormattingService
         self.hud = hud ?? DictationHUD()
 
         // Restore persisted transcription count.
@@ -290,8 +293,13 @@ final class DictationManager: ObservableObject {
 
             logger.info("DictationManager: transcription received (\(rawTranscript.count) chars)")
 
-            // Apply tone transformation.
-            let finalText = applyToneTransformation(rawTranscript, tone: toneProfile)
+            // Apply formatting (LLM-based or rule-based).
+            let finalText: String
+            if FormattingConfig.isLLMFormattingEnabled {
+                finalText = await formatWithLLM(rawTranscript, appContext: appContext, tone: toneProfile, apiKey: apiKey)
+            } else {
+                finalText = applyToneTransformation(rawTranscript, tone: toneProfile)
+            }
 
             // Insert text at the cursor position.
             textInserter.insertText(finalText)
@@ -319,5 +327,32 @@ final class DictationManager: ObservableObject {
     /// Applies tone transformation to the transcribed text using ToneTransformer.
     private func applyToneTransformation(_ text: String, tone: ToneProfile) -> String {
         toneTransformer.transform(text, tone: tone)
+    }
+
+    /// Formats text using the LLM service, falling back to rule-based
+    /// ``ToneTransformer`` on any error.
+    private func formatWithLLM(
+        _ text: String,
+        appContext: AppContext,
+        tone: ToneProfile,
+        apiKey: String
+    ) async -> String {
+        let category = FormattingCategory.classify(appContext)
+        let systemPrompt = category.systemPrompt(for: tone)
+
+        logger.info("DictationManager: formatting category = \(category), bundleID = \(appContext.bundleIdentifier ?? "nil"), windowTitle = \(appContext.windowTitle ?? "nil")")
+
+        do {
+            let formatted = try await llmFormattingService.format(
+                transcript: text,
+                systemPrompt: systemPrompt,
+                apiKey: apiKey
+            )
+            logger.info("DictationManager: LLM formatting succeeded (category: \(category))")
+            return formatted
+        } catch {
+            logger.warning("DictationManager: LLM formatting failed, falling back to rule-based - \(error.localizedDescription)")
+            return applyToneTransformation(text, tone: tone)
+        }
     }
 }

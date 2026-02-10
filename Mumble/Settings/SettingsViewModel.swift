@@ -95,6 +95,13 @@ final class SettingsViewModel: ObservableObject {
     /// The currently configured dictation shortcut.
     @Published var currentShortcut: ShortcutBinding = .load()
 
+    // MARK: - Formatting State
+
+    /// Whether LLM-based smart formatting is enabled.
+    @Published var isLLMFormattingEnabled: Bool = FormattingConfig.isLLMFormattingEnabled {
+        didSet { FormattingConfig.isLLMFormattingEnabled = isLLMFormattingEnabled }
+    }
+
     // MARK: - Tone Config State
 
     /// The user's per-group tone mapping configuration.

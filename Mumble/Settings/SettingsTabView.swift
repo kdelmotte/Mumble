@@ -21,6 +21,7 @@ struct SettingsTabView: View {
 
                 Form {
                     apiKeySection
+                    formattingSection
                     microphoneSection
                     generalSection
                     soundsSection
@@ -60,6 +61,20 @@ struct SettingsTabView: View {
             }
         } header: {
             Text("Groq API Key")
+        }
+    }
+
+    // MARK: - Text Formatting
+
+    private var formattingSection: some View {
+        Section {
+            Toggle("Smart formatting", isOn: $viewModel.isLLMFormattingEnabled)
+
+            Text("Uses AI to clean up filler words, fix grammar, handle corrections, and format text based on the app you're typing in.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        } header: {
+            Text("Text Formatting")
         }
     }
 
