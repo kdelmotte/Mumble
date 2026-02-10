@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Mumble/Resources/Assets.xcassets/AppIcon.appiconset/icon_256x256.png" width="128" height="128" alt="Mumble icon" />
+  <img src="assets/readme-icon.png" width="128" height="128" alt="Mumble icon" />
 </p>
 
 <h1 align="center">Mumble</h1>
@@ -41,6 +41,19 @@ Just grab a free API key from [console.groq.com](https://console.groq.com) and y
 - **Zero clutter** — lives in the menu bar, no Dock icon, no windows in your way.
 - **Guided setup** — onboarding walks you through API key, permissions, and preferences.
 
+## Smart Formatting
+
+Mumble doesn't just transcribe — it formats. An LLM pass automatically structures your dictation based on the active app:
+
+| Context | What it does |
+|---|---|
+| **Email** (Gmail, Outlook, Apple Mail) | Structures greeting / body / sign-off with proper paragraph flow |
+| **Messaging** (Slack, iMessage, Discord) | Keeps text casual, converts spoken emoji names to symbols |
+| **Code** (VS Code, Xcode, Terminal) | Preserves technical terms, avoids autocorrect-style changes |
+| **General** (everything else) | Clean sentences with standard punctuation |
+
+Context is detected from the frontmost app's bundle ID and, for browsers, the page title. Smart formatting is enabled by default and can be toggled off in Settings.
+
 ## Getting Started
 
 **You'll need:** macOS 14+ (Sonoma), Xcode 15+, and a free [Groq API key](https://console.groq.com/) (no credit card required).
@@ -57,19 +70,20 @@ The app will walk you through the rest.
 ## How It Works
 
 ```
-    You speak        Mumble listens       Groq transcribes       Text appears
-  ┌──────────┐      ┌─────────────┐      ┌────────────────┐     ┌───────────┐
-  │ Hold Fn  │ ──▶  │  Record mic │ ──▶  │  Whisper API   │ ──▶ │ At cursor │
-  └──────────┘      └─────────────┘      └────────────────┘     └───────────┘
-                                                │
-                                                ▼
-                                      ┌──────────────────┐
-                                      │ Tone Transformer  │
-                                      │ (casual? formal?) │
-                                      └──────────────────┘
+    You speak        Mumble listens       Groq transcribes      Smart formatting     Text appears
+  ┌──────────┐      ┌─────────────┐      ┌────────────────┐    ┌───────────────┐    ┌───────────┐
+  │ Hold Fn  │ ──▶  │  Record mic │ ──▶  │  Whisper API   │ ──▶│ Context-aware │ ──▶│ At cursor │
+  └──────────┘      └─────────────┘      └────────────────┘    │   LLM format  │    └───────────┘
+                                                                └───────────────┘
+                                                                       ▲
+                                                                ┌──────┴───────┐
+                                                                │ Detect app:  │
+                                                                │ email? chat? │
+                                                                │ code? other? │
+                                                                └──────────────┘
 ```
 
-Under the hood: **DictationManager** orchestrates everything — shortcut monitoring, audio recording, Groq API transcription, tone transformation, and text insertion via Accessibility APIs.
+Under the hood: **DictationManager** orchestrates everything — shortcut monitoring, audio recording, Groq API transcription, context-aware formatting, and text insertion via Accessibility APIs.
 
 ## Troubleshooting
 
