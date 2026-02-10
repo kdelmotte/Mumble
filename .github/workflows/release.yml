@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-release:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Import signing certificate
+        env:
+          P12_BASE64: ${{ secrets.DEVELOPER_ID_APPLICATION_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+        run: |
+          CERT_PATH="$RUNNER_TEMP/certificate.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 32)"
+
+          echo -n "$P12_BASE64" | base64 --decode -o "$CERT_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -target Mumble \
+            -configuration Release \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            DSTROOT="$RUNNER_TEMP/build" \
+            | xcpretty
+
+      - name: Verify code signature
+        run: |
+          APP_PATH="$RUNNER_TEMP/build/Applications/Mumble.app"
+          codesign --verify --deep --strict "$APP_PATH"
+          codesign -d --verbose=2 "$APP_PATH" 2>&1 | grep -q "flags=0x10000(runtime)"
+
+      - name: Notarize
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          APP_PATH="$RUNNER_TEMP/build/Applications/Mumble.app"
+          ZIP_PATH="$RUNNER_TEMP/Mumble-notarize.zip"
+
+          ditto -c -k --keepParent "$APP_PATH" "$ZIP_PATH"
+
+          xcrun notarytool submit "$ZIP_PATH" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+      - name: Staple notarization ticket
+        run: |
+          APP_PATH="$RUNNER_TEMP/build/Applications/Mumble.app"
+          xcrun stapler staple "$APP_PATH"
+
+      - name: Package for release
+        run: |
+          APP_PATH="$RUNNER_TEMP/build/Applications/Mumble.app"
+          TAG="${GITHUB_REF_NAME}"
+          RELEASE_ZIP="$RUNNER_TEMP/Mumble-${TAG}.zip"
+          ditto -c -k --keepParent "$APP_PATH" "$RELEASE_ZIP"
+          echo "RELEASE_ZIP=$RELEASE_ZIP" >> "$GITHUB_ENV"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.RELEASE_ZIP }}
+          generate_release_notes: true
+
+      - name: Clean up keychain
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true

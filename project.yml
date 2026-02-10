@@ -33,6 +33,7 @@ targets:
         MACOSX_DEPLOYMENT_TARGET: "14.0"
         CODE_SIGN_ENTITLEMENTS: Mumble/Mumble.entitlements
         GENERATE_INFOPLIST_FILE: false
+        ENABLE_HARDENED_RUNTIME: YES
 
   MumbleTests:
     type: bundle.unit-test
