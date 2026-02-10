@@ -17,22 +17,6 @@ struct AppContext: Equatable, Sendable {
     let windowTitle: String?
 }
 
-// MARK: - Known Bundle Identifiers
-
-private enum KnownBundleID {
-    static let safari   = "com.apple.Safari"
-    static let chrome   = "com.google.Chrome"
-    static let arc      = "company.thebrowser.Browser"
-    static let edge     = "com.microsoft.edgemac"
-    static let messages = "com.apple.MobileSMS"
-    static let mail     = "com.apple.mail"
-    static let slack    = "com.tinyspeck.slackmacgap"
-    static let discord  = "com.hnc.Discord"
-
-    /// All bundle identifiers that correspond to web browsers.
-    static let browsers: Set<String> = [safari, chrome, arc, edge]
-}
-
 // MARK: - AppContextDetector
 
 /// Detects which application is currently in the foreground and, for known browsers,
@@ -59,7 +43,7 @@ final class AppContextDetector {
 
         var windowTitle: String?
 
-        if let bundleID, KnownBundleID.browsers.contains(bundleID) {
+        if let bundleID, AppRegistry.browserBundleIDs.contains(bundleID) {
             windowTitle = fetchBrowserWindowTitle(pid: frontmost.processIdentifier)
         }
 
@@ -81,6 +65,8 @@ final class AppContextDetector {
             return nil
         }
 
+        // Force cast is safe: AXUIElement is a CoreFoundation opaque type and
+        // the conditional downcast always succeeds (compiler-verified).
         let windowElement = windowValue as! AXUIElement
 
         var titleValue: CFTypeRef?

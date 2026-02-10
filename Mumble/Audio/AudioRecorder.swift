@@ -9,7 +9,6 @@
 import AVFoundation
 import Combine
 import CoreAudio
-import os.log
 
 // MARK: - Error Types
 
@@ -58,7 +57,7 @@ final class AudioRecorder: ObservableObject {
 
     // MARK: Private Properties
 
-    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.mumble", category: "AudioRecorder")
+    private let logger = STTLogger.shared
 
     private var audioEngine: AVAudioEngine?
     private var pcmBuffers: [Data] = []
@@ -296,7 +295,7 @@ final class AudioRecorder: ObservableObject {
         }
 
         isRecording = true
-        logger.info("Recording started (device: \(self.selectedDeviceUID ?? "default", privacy: .public))")
+        logger.info("Recording started (device: \(self.selectedDeviceUID ?? "default"))")
     }
 
     /// Stop recording and return the captured audio as WAV-formatted `Data`.

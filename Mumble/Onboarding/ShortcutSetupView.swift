@@ -1,13 +1,13 @@
 // ShortcutSetupView.swift
 // Mumble
 //
-// Onboarding step 2: lets the user see/change their dictation shortcut and
+// Onboarding step 3: lets the user see/change their dictation shortcut and
 // try it live with real audio transcription.
 
 import SwiftUI
 import AppKit
 
-// MARK: - ShortcutSetupView (Step 2)
+// MARK: - ShortcutSetupView (Step 3 — Shortcut)
 
 struct ShortcutSetupView: View {
 

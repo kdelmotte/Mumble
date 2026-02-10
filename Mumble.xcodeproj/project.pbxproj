@@ -54,6 +54,9 @@
 		E44E1265D10008D139AF8454 /* DictationHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 457FC8C1E4B8E00792F4A979 /* DictationHUD.swift */; };
 		F6D76D5BB5560F2A2E7F403A /* LLMFormattingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2CEBE34DB2C50ED703703D /* LLMFormattingService.swift */; };
 		FEBE01C80EEB5F8E5C8A1678 /* ShortcutBindingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC3F55AC94830D252804C03E /* ShortcutBindingTests.swift */; };
+		A1B2C3D4E5F6A7B800000001 /* ShortcutRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B800000002 /* ShortcutRecorder.swift */; };
+		A1B2C3D4E5F6A7B800000003 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B800000004 /* APIClient.swift */; };
+		A1B2C3D4E5F6A7B800000005 /* AppRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B800000006 /* AppRegistry.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -102,6 +105,9 @@
 		8E04DB5EFE4532DE032B8384 /* ToneTransformerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneTransformerTests.swift; sourceTree = "<group>"; };
 		8EE95F7B9008235FDBF30003 /* AppContextDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContextDetector.swift; sourceTree = "<group>"; };
 		9CA9FE562B2261B460CBCAF0 /* SettingsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTabView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B800000002 /* ShortcutRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRecorder.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B800000004 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B800000006 /* AppRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRegistry.swift; sourceTree = "<group>"; };
 		AA4D62FE94608BCC954854C6 /* PermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionManager.swift; sourceTree = "<group>"; };
 		AC3F55AC94830D252804C03E /* ShortcutBindingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutBindingTests.swift; sourceTree = "<group>"; };
 		B6A682C63C3FEECB30D646F1 /* LoginItemManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemManager.swift; sourceTree = "<group>"; };
@@ -202,6 +208,7 @@
 			isa = PBXGroup;
 			children = (
 				8EE95F7B9008235FDBF30003 /* AppContextDetector.swift */,
+				A1B2C3D4E5F6A7B800000006 /* AppRegistry.swift */,
 			);
 			path = Context;
 			sourceTree = "<group>";
@@ -217,12 +224,14 @@
 		6442534DD50F1A68A72DD154 /* Infrastructure */ = {
 			isa = PBXGroup;
 			children = (
+				A1B2C3D4E5F6A7B800000004 /* APIClient.swift */,
 				121D37A1D5CF90BA091DF00A /* KeychainManager.swift */,
 				14EBD1A6A93DC01E4557FC1C /* Logger.swift */,
 				B6A682C63C3FEECB30D646F1 /* LoginItemManager.swift */,
 				AA4D62FE94608BCC954854C6 /* PermissionManager.swift */,
 				14164098C6452D81BCF8EDDA /* ShortcutBinding.swift */,
 				3792E0B543F3716674CBC002 /* ShortcutMonitor.swift */,
+				A1B2C3D4E5F6A7B800000002 /* ShortcutRecorder.swift */,
 				362998EC504F5B8B460B180E /* TextInserter.swift */,
 			);
 			path = Infrastructure;
@@ -375,7 +384,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				8849297367792BBE5C1A80C3 /* APIKeySetupView.swift in Sources */,
+				A1B2C3D4E5F6A7B800000003 /* APIClient.swift in Sources */,
 				1745D80B6A856558DCF08803 /* AppContextDetector.swift in Sources */,
+				A1B2C3D4E5F6A7B800000005 /* AppRegistry.swift in Sources */,
 				78514BBC5B24A40CC47A1570 /* AppDelegate.swift in Sources */,
 				5275B9DF50062D3454EF7782 /* AudioRecorder.swift in Sources */,
 				0BF45AAB33C78FDEAC25E7F8 /* AudioWaveView.swift in Sources */,
@@ -401,6 +412,7 @@
 				6203291560890A2D7523BB9C /* SettingsViewModel.swift in Sources */,
 				158D56FAB364DB87EC553AFD /* ShortcutBinding.swift in Sources */,
 				D68106A2756E8FDA1FAAC378 /* ShortcutMonitor.swift in Sources */,
+				A1B2C3D4E5F6A7B800000001 /* ShortcutRecorder.swift in Sources */,
 				45C8EE9E862220FBFAEF403F /* ShortcutSetupView.swift in Sources */,
 				C10F4A83DB5375A94BDB2C84 /* ShortcutTabView.swift in Sources */,
 				72B687071816C1CB0CFE0C33 /* SoundPlayer.swift in Sources */,

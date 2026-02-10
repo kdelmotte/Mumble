@@ -161,17 +161,23 @@ final class DictationManager: ObservableObject {
 
         if !permissionManager.microphoneGranted {
             logger.warning("DictationManager: microphone permission not granted, cannot start dictation")
+            hud.show()
+            hud.showError("Microphone access required")
             return
         }
 
         if !permissionManager.accessibilityGranted {
             logger.warning("DictationManager: accessibility permission not granted, cannot start dictation")
+            hud.show()
+            hud.showError("Accessibility access required")
             return
         }
 
         // 2. Check API key.
         guard keychainManager.getAPIKey() != nil else {
             logger.warning("DictationManager: no API key configured, cannot start dictation")
+            hud.show()
+            hud.showError("API key missing")
             return
         }
 
@@ -183,6 +189,8 @@ final class DictationManager: ObservableObject {
             try audioRecorder.startRecording()
         } catch {
             logger.error("DictationManager: failed to start recording - \(error.localizedDescription)")
+            hud.show()
+            hud.showError("Recording failed to start")
             return
         }
 

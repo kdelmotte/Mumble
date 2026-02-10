@@ -8,7 +8,6 @@
 
 import AppKit
 import SwiftUI
-import Combine
 
 // MARK: - MenuBarStatus
 
@@ -45,7 +44,6 @@ final class MenuBarManager: NSObject {
 
     private var statusItem: NSStatusItem?
     private var menu: NSMenu?
-    private var cancellables = Set<AnyCancellable>()
 
     /// The current operational status shown in the dropdown.
     private(set) var status: MenuBarStatus = .idle

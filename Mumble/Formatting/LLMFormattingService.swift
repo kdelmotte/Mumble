@@ -53,8 +53,8 @@ final class LLMFormattingService {
     private let model = "llama-3.3-70b-versatile"
     private let temperature: Double = 0.1
     private let maxTokens = 1024
-    private let requestTimeoutInterval: TimeInterval = 5
 
+    private let apiClient = APIClient(defaultTimeout: 5)
     private let logger = STTLogger.shared
 
     private init() {}
@@ -74,37 +74,34 @@ final class LLMFormattingService {
             throw LLMFormattingError.noAPIKey
         }
 
-        let requestBody = buildRequestBody(transcript: transcript, systemPrompt: systemPrompt)
-
-        var request = URLRequest(url: endpoint)
-        request.httpMethod = "POST"
-        request.timeoutInterval = requestTimeoutInterval
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = requestBody
+        let requestBody = try buildRequestBody(transcript: transcript, systemPrompt: systemPrompt)
+        let request = apiClient.buildRequest(url: endpoint, apiKey: apiKey, body: requestBody)
 
         logger.debug("LLMFormattingService: sending formatting request (\(transcript.count) chars)")
 
         let data: Data
-        let response: URLResponse
+        let statusCode: Int
 
         do {
-            (data, response) = try await URLSession.shared.data(for: request)
-        } catch let urlError as URLError where urlError.code == .timedOut {
-            logger.warning("LLMFormattingService: request timed out")
-            throw LLMFormattingError.timeout
-        } catch {
-            logger.warning("LLMFormattingService: network error - \(error.localizedDescription)")
-            throw LLMFormattingError.networkError(error)
+            (data, statusCode) = try await apiClient.execute(request)
+        } catch let error as APIClientError {
+            switch error {
+            case .timeout:
+                logger.warning("LLMFormattingService: request timed out")
+                throw LLMFormattingError.timeout
+            default:
+                logger.warning("LLMFormattingService: network error - \(error.localizedDescription)")
+                throw LLMFormattingError.networkError(error)
+            }
         }
 
-        return try parseResponse(data: data, response: response, originalTranscript: transcript)
+        return try parseResponse(data: data, statusCode: statusCode, originalTranscript: transcript)
     }
 
     // MARK: - Private Helpers
 
     /// Builds the JSON request body for the Chat Completions API.
-    private func buildRequestBody(transcript: String, systemPrompt: String) -> Data {
+    private func buildRequestBody(transcript: String, systemPrompt: String) throws -> Data {
         let body: [String: Any] = [
             "model": model,
             "temperature": temperature,
@@ -115,26 +112,18 @@ final class LLMFormattingService {
             ]
         ]
 
-        // Force-unwrap is safe here: the dictionary contains only JSON-compatible types.
-        return try! JSONSerialization.data(withJSONObject: body)
+        return try JSONSerialization.data(withJSONObject: body)
     }
 
     /// Parses the Chat Completions response and extracts the formatted text.
-    private func parseResponse(data: Data, response: URLResponse, originalTranscript: String) throws -> String {
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw LLMFormattingError.networkError(
-                NSError(domain: "LLMFormattingService", code: -1,
-                        userInfo: [NSLocalizedDescriptionKey: "Invalid response type"])
-            )
-        }
+    private func parseResponse(data: Data, statusCode: Int, originalTranscript: String) throws -> String {
+        logger.debug("LLMFormattingService: response status \(statusCode)")
 
-        logger.debug("LLMFormattingService: response status \(httpResponse.statusCode)")
-
-        guard httpResponse.statusCode == 200 else {
-            let message = extractErrorMessage(from: data)
-            logger.warning("LLMFormattingService: API error \(httpResponse.statusCode): \(message ?? "unknown")")
+        guard statusCode == 200 else {
+            let message = apiClient.extractErrorMessage(from: data)
+            logger.warning("LLMFormattingService: API error \(statusCode): \(message ?? "unknown")")
             throw LLMFormattingError.invalidResponse(
-                statusCode: httpResponse.statusCode,
+                statusCode: statusCode,
                 message: message
             )
         }
@@ -174,17 +163,6 @@ final class LLMFormattingService {
         }
     }
 
-    /// Attempts to extract a human-readable error message from a JSON error response.
-    private func extractErrorMessage(from data: Data) -> String? {
-        struct ErrorEnvelope: Decodable {
-            struct ErrorBody: Decodable {
-                let message: String
-            }
-            let error: ErrorBody
-        }
-
-        return try? JSONDecoder().decode(ErrorEnvelope.self, from: data).error.message
-    }
 }
 
 // MARK: - Chat Completion Response Models

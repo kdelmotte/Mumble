@@ -5,6 +5,7 @@
 // Other). Persisted via UserDefaults as JSON.
 
 import Foundation
+import SwiftUI
 
 // MARK: - AppGroup
 
@@ -17,26 +18,9 @@ enum AppGroup: String, CaseIterable, Codable, Identifiable {
 
     var id: String { rawValue }
 
-    /// The bundle identifiers that belong to this group.
+    /// The bundle identifiers that belong to this group, derived from ``AppRegistry``.
     var bundleIDs: Set<String> {
-        switch self {
-        case .personal:
-            return [
-                "com.apple.MobileSMS",   // Messages
-                "com.hnc.Discord"        // Discord
-            ]
-        case .work:
-            return [
-                "com.apple.mail",              // Mail
-                "com.tinyspeck.slackmacgap",   // Slack
-                "com.apple.Safari",            // Safari
-                "com.google.Chrome",           // Chrome
-                "company.thebrowser.Browser",  // Arc
-                "com.microsoft.edgemac"        // Edge
-            ]
-        case .other:
-            return []  // Catch-all for any app not listed above.
-        }
+        AppRegistry.bundleIDs(for: self)
     }
 
     /// User-facing name shown in the settings UI.
@@ -60,12 +44,7 @@ enum AppGroup: String, CaseIterable, Codable, Identifiable {
     /// Returns the `AppGroup` that a given bundle identifier belongs to,
     /// falling back to `.other` if not found.
     static func group(for bundleID: String) -> AppGroup {
-        for group in AppGroup.allCases where group != .other {
-            if group.bundleIDs.contains(bundleID) {
-                return group
-            }
-        }
-        return .other
+        AppRegistry.toneGroup(for: bundleID)
     }
 }
 
@@ -122,5 +101,19 @@ struct ToneMappingConfig: Codable, Equatable {
         if let data = try? JSONEncoder().encode(self) {
             UserDefaults.standard.set(data, forKey: ToneMappingConfig.userDefaultsKey)
         }
+    }
+
+    /// Returns a two-way `Binding<ToneProfile>` for the given app group
+    /// that auto-saves changes to UserDefaults. Both SettingsViewModel and
+    /// OnboardingViewModel call this shared factory.
+    static func toneBinding(
+        for group: AppGroup,
+        get configGetter: @escaping () -> ToneMappingConfig?,
+        set configSetter: @escaping (ToneProfile, AppGroup) -> Void
+    ) -> Binding<ToneProfile> {
+        Binding(
+            get: { configGetter()?.tone(for: group) ?? .casual },
+            set: { configSetter($0, group) }
+        )
     }
 }

@@ -8,7 +8,6 @@
 
 import AVFoundation
 import Combine
-import os.log
 
 // MARK: - SoundPlayer
 
@@ -25,7 +24,7 @@ final class SoundPlayer: ObservableObject {
 
     // MARK: Private Properties
 
-    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.mumble", category: "SoundPlayer")
+    private let logger = STTLogger.shared
 
     /// Cached WAV data for the start tone (generated lazily).
     private var startSoundData: Data?

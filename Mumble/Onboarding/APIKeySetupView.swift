@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - APIKeySetupView (Step 2)
+// MARK: - APIKeySetupView (Step 2 — API Key)
 
 struct APIKeySetupView: View {
 

@@ -39,29 +39,11 @@ enum FormattingCategory {
         return .general
     }
 
-    // MARK: - Known Bundle IDs
+    // MARK: - Known Bundle IDs (derived from AppRegistry)
 
-    private static let emailBundleIDs: Set<String> = [
-        "com.apple.mail"
-    ]
-
-    private static let messagingBundleIDs: Set<String> = [
-        "com.apple.MobileSMS",
-        "com.hnc.Discord",
-        "com.tinyspeck.slackmacgap"
-    ]
-
-    private static let codeBundleIDs: Set<String> = [
-        "com.microsoft.VSCode",
-        "com.apple.dt.Xcode",
-        "com.googlecode.iterm2",
-        "com.jetbrains.intellij",
-        "com.jetbrains.pycharm",
-        "com.jetbrains.WebStorm",
-        "com.jetbrains.CLion",
-        "com.jetbrains.goland",
-        "com.jetbrains.rider"
-    ]
+    private static let emailBundleIDs: Set<String> = AppRegistry.bundleIDs(for: .email)
+    private static let messagingBundleIDs: Set<String> = AppRegistry.bundleIDs(for: .messaging)
+    private static let codeBundleIDs: Set<String> = AppRegistry.bundleIDs(for: .code)
 
     // MARK: - Window Title Patterns (for browser-based detection)
 

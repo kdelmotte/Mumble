@@ -109,17 +109,7 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - Shortcut Recording
 
-    /// Active local event monitors installed during shortcut recording.
-    private var recordingMonitors: [Any] = []
-
-    /// Completion callback for when recording finishes or is cancelled.
-    private var recordingCompletion: (() -> Void)?
-
-    /// Tracks the peak modifier flags seen during a modifier-only recording.
-    private var peakModifierFlags: NSEvent.ModifierFlags = []
-
-    /// Whether a key-down event occurred during the current recording session.
-    private var sawKeyDown = false
+    private let shortcutRecorder = ShortcutRecorder()
 
     // MARK: - Init
 
@@ -137,6 +127,11 @@ final class SettingsViewModel: ObservableObject {
         self.soundPlayer = soundPlayer
         self.dictationManager = dictationManager
         self.transcriptionService = transcriptionService
+
+        shortcutRecorder.onRecorded = { [weak self] binding in
+            self?.currentShortcut = binding
+            self?.dictationManager?.updateShortcut(binding)
+        }
 
         loadMaskedKey()
         refreshDevices()
@@ -250,42 +245,14 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - Shortcut Recording
 
-    /// Begins listening for a new shortcut. Installs temporary local monitors
-    /// for `.flagsChanged` and `.keyDown`. Calls `completion` when the
-    /// recording finishes (either via capture or cancellation).
     func startRecordingShortcut(completion: @escaping () -> Void) {
-        // Clean up any prior session.
-        removeRecordingMonitors()
-        recordingCompletion = completion
-        peakModifierFlags = []
-        sawKeyDown = false
-
-        // Monitor flagsChanged — for modifier-only capture and tracking.
-        if let flagsMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
-            self?.handleRecordingFlagsChanged(event)
-            return nil  // Consume the event.
-        } {
-            recordingMonitors.append(flagsMonitor)
-        }
-
-        // Monitor keyDown — for modifier+key capture and Escape cancellation.
-        if let keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            self?.handleRecordingKeyDown(event)
-            return nil  // Consume the event.
-        } {
-            recordingMonitors.append(keyMonitor)
-        }
+        shortcutRecorder.startRecording(completion: completion)
     }
 
-    /// Cancels an in-progress shortcut recording.
     func cancelRecordingShortcut() {
-        removeRecordingMonitors()
-        let completion = recordingCompletion
-        recordingCompletion = nil
-        completion?()
+        shortcutRecorder.cancelRecording()
     }
 
-    /// Resets the shortcut to the default Fn key, saves, and applies.
     func resetShortcutToDefault() {
         ShortcutBinding.resetToDefault()
         currentShortcut = .defaultFnKey
@@ -297,72 +264,14 @@ final class SettingsViewModel: ObservableObject {
     /// Returns a two-way `Binding<ToneProfile>` for the given app group
     /// that auto-saves changes to UserDefaults.
     func toneBinding(for group: AppGroup) -> Binding<ToneProfile> {
-        Binding(
-            get: { [weak self] in
-                self?.toneMappingConfig.tone(for: group) ?? .casual
-            },
-            set: { [weak self] newTone in
+        ToneMappingConfig.toneBinding(
+            for: group,
+            get: { [weak self] in self?.toneMappingConfig },
+            set: { [weak self] newTone, group in
                 self?.toneMappingConfig.setTone(newTone, for: group)
                 self?.toneMappingConfig.save()
             }
         )
     }
 
-    // MARK: - Private Helpers (Recording)
-
-    private func handleRecordingFlagsChanged(_ event: NSEvent) {
-        let flags = event.modifierFlags
-        let relevantFlags: NSEvent.ModifierFlags = [.command, .option, .control, .shift, .function]
-        let current = flags.intersection(relevantFlags)
-
-        if !current.isEmpty {
-            // Accumulate the peak set of modifiers.
-            peakModifierFlags = peakModifierFlags.union(current)
-        } else if !peakModifierFlags.isEmpty && !sawKeyDown {
-            // All modifiers released without any key pressed in between →
-            // finalize as a modifier-only shortcut.
-            let binding = ShortcutBinding(
-                modifierFlagsRaw: peakModifierFlags.rawValue,
-                keyCode: nil
-            )
-            finalizeRecording(binding)
-        }
-    }
-
-    private func handleRecordingKeyDown(_ event: NSEvent) {
-        // Escape cancels recording.
-        if event.keyCode == 53 {
-            cancelRecordingShortcut()
-            return
-        }
-
-        sawKeyDown = true
-
-        let relevantFlags: NSEvent.ModifierFlags = [.command, .option, .control, .shift, .function]
-        let modifiers = event.modifierFlags.intersection(relevantFlags)
-
-        let binding = ShortcutBinding(
-            modifierFlagsRaw: modifiers.rawValue,
-            keyCode: event.keyCode
-        )
-        finalizeRecording(binding)
-    }
-
-    private func finalizeRecording(_ binding: ShortcutBinding) {
-        removeRecordingMonitors()
-        currentShortcut = binding
-        binding.save()
-        dictationManager?.updateShortcut(binding)
-
-        let completion = recordingCompletion
-        recordingCompletion = nil
-        completion?()
-    }
-
-    private func removeRecordingMonitors() {
-        for monitor in recordingMonitors {
-            NSEvent.removeMonitor(monitor)
-        }
-        recordingMonitors.removeAll()
-    }
 }
