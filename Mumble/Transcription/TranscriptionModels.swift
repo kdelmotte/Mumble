@@ -20,7 +20,7 @@ struct TranscriptionRequest {
     /// Optional BCP-47 language code (e.g. "en") to guide transcription.
     let language: String?
 
-    init(audioData: Data, model: String = "whisper-large-v3-turbo", language: String? = nil) {
+    init(audioData: Data, model: String = "whisper-large-v3", language: String? = nil) {
         self.audioData = audioData
         self.model = model
         self.language = language

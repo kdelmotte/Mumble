@@ -13,7 +13,7 @@ final class GroqTranscriptionService {
 
     private let endpoint = URL(string: "https://api.groq.com/openai/v1/audio/transcriptions")!
     private let modelsEndpoint = URL(string: "https://api.groq.com/openai/v1/models")!
-    private let defaultModel = "whisper-large-v3-turbo"
+    private let defaultModel = "whisper-large-v3"
 
     private let apiClient = APIClient(defaultTimeout: 30)
     private let logger = STTLogger.shared
