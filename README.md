@@ -11,7 +11,7 @@
 
 <p align="center">
   Hold <kbd>Fn</kbd> &rarr; speak &rarr; release &rarr; text appears at your cursor.
-  <br/>That's it. That's the app.
+  <br/>Exactly the way you wanted it.
 </p>
 
 ---
