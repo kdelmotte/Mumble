@@ -3,6 +3,12 @@ import XCTest
 
 final class AppContextDetectorTests: XCTestCase {
 
+    override func setUp() {
+        super.setUp()
+        // Remove any persisted ToneMappingConfig so toneForApp() uses the default config
+        UserDefaults.standard.removeObject(forKey: "com.mumble.toneMappingConfig")
+    }
+
     // MARK: - toneForApp() Mapping Tests
 
     func testMessages_returnsVeryCasual() {
