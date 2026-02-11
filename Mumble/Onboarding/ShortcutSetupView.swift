@@ -104,7 +104,7 @@ struct ShortcutSetupView: View {
             // Transcribed text area
             TextEditor(text: $viewModel.demoText)
                 .font(.body)
-                .frame(minHeight: 60, maxHeight: 80)
+                .frame(minHeight: 40, maxHeight: 60)
                 .scrollContentBackground(.hidden)
                 .padding(8)
                 .background(Color(nsColor: .textBackgroundColor))

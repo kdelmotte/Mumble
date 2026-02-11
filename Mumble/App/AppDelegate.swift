@@ -295,6 +295,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         appState.configureDictationManager()
 
         STTLogger.shared.info("Onboarding completed -- transitioned to menu bar mode")
+
+        // Show Settings so the user can explore available options.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.showSettingsWindow()
+        }
     }
 }
 
