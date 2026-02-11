@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/readme-icon.png" width="128" height="128" alt="Mumble icon" />
+  <img src="assets/readme-icon.png" width="150" height="150" alt="Mumble icon" />
 </p>
 
 <h1 align="center">Mumble</h1>
