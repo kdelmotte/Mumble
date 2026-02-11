@@ -13,7 +13,9 @@
 		158D56FAB364DB87EC553AFD /* ShortcutBinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14164098C6452D81BCF8EDDA /* ShortcutBinding.swift */; };
 		1745D80B6A856558DCF08803 /* AppContextDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EE95F7B9008235FDBF30003 /* AppContextDetector.swift */; };
 		2B7C67BF0DA9BEFD167D9DAF /* HomeTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D59DEB149D775F191EE556 /* HomeTabView.swift */; };
+		2E30345F4DCBF1D8FAFF0A61 /* ShortcutRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E32F54C444A6795CF67B83C8 /* ShortcutRecorder.swift */; };
 		2F4217DBCDAAAB068B1E6A39 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C65E992585E5FD5BE7B2CE10 /* OnboardingView.swift */; };
+		2F62C2D5A85D151E4136E19A /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 70606E58927A57EF7736E371 /* TelemetryDeck */; };
 		3E1B974881CCC33E5EFFFB4B /* FormattingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEF2F11108BBD2D74B189CCF /* FormattingContext.swift */; };
 		421E90002B795DB44C82BE8B /* TranscriptionParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 784B6DD36ECB1754CA10EEA0 /* TranscriptionParserTests.swift */; };
 		45C8EE9E862220FBFAEF403F /* ShortcutSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C12F9978477313B39AA0DD1 /* ShortcutSetupView.swift */; };
@@ -26,18 +28,21 @@
 		5275B9DF50062D3454EF7782 /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA79D24EC874A899FBF280B5 /* AudioRecorder.swift */; };
 		5B6545EF5110C44E4E4A3AC4 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F319B20C1CB48B4BE196AA5 /* SettingsView.swift */; };
 		5F4E20469852DF486FF9C43A /* LoginItemManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A682C63C3FEECB30D646F1 /* LoginItemManager.swift */; };
+		5FE36878CA401C9C9B275571 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A6D8EDD90EB3A8DE48A190 /* APIClient.swift */; };
 		6203291560890A2D7523BB9C /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A48AB9153C743F1B8C9CAA /* SettingsViewModel.swift */; };
 		628C63F83C831DC1F5EC87A2 /* OnboardingViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7DEA48625C09A88BE728F9 /* OnboardingViewModelTests.swift */; };
-		F0B2C3D4E5F6A7B8C9D0E1F2 /* FormattingCategoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A1B2C3D4E5F6A7B8C9D0E1 /* FormattingCategoryTests.swift */; };
 		6F3437D350181A8A70F0431C /* AppContextDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77531A7C3F3E1ADED5BBE849 /* AppContextDetectorTests.swift */; };
 		72B687071816C1CB0CFE0C33 /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87B4178128C9318330DCC650 /* SoundPlayer.swift */; };
 		78514BBC5B24A40CC47A1570 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13EA1ADF3F5AC6FD1099FC40 /* AppDelegate.swift */; };
+		78971A500727A5C25875B4E8 /* AppRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DBDA956AC78DBF36BF37AAE /* AppRegistry.swift */; };
 		7E4B01179BC3DC79A122B275 /* SettingsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CA9FE562B2261B460CBCAF0 /* SettingsTabView.swift */; };
+		7EB53DB7DE4DC4B2CFB7A005 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D2837FC063A5971658AD39 /* Analytics.swift */; };
 		8283E0E287C0FBA1C5798C6E /* PermissionStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04E2D5DE33F6B667F81D8D33 /* PermissionStateTests.swift */; };
 		8849297367792BBE5C1A80C3 /* APIKeySetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27356BC0C8627EDF516AC463 /* APIKeySetupView.swift */; };
 		89BE7BE68DA5EA7A23D68664 /* ToneTransformerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E04DB5EFE4532DE032B8384 /* ToneTransformerTests.swift */; };
 		8C05A7CA87CAF556CDD99DF1 /* ToneProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70C4F7FB5626BC535314179F /* ToneProfile.swift */; };
 		905FF816144F5278C91EEE5A /* GroqTranscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F240C84375B3DABB307DCFB /* GroqTranscriptionService.swift */; };
+		9212F8D5312A9D07734BCC45 /* FormattingCategoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDF4AA0439B4BA050DC1E60F /* FormattingCategoryTests.swift */; };
 		98F747D52CD9CD2EA6CA9E60 /* MenuBarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41F9FB9BD1CB4AD00EA6BED9 /* MenuBarManager.swift */; };
 		A4CCD1E421AE3AB04AC27B10 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14EBD1A6A93DC01E4557FC1C /* Logger.swift */; };
 		AE7A41D0C7B086A4D44D0A65 /* ToneTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E741ED2A84D27E16D150A46 /* ToneTabView.swift */; };
@@ -54,9 +59,6 @@
 		E44E1265D10008D139AF8454 /* DictationHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 457FC8C1E4B8E00792F4A979 /* DictationHUD.swift */; };
 		F6D76D5BB5560F2A2E7F403A /* LLMFormattingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2CEBE34DB2C50ED703703D /* LLMFormattingService.swift */; };
 		FEBE01C80EEB5F8E5C8A1678 /* ShortcutBindingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC3F55AC94830D252804C03E /* ShortcutBindingTests.swift */; };
-		A1B2C3D4E5F6A7B800000001 /* ShortcutRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B800000002 /* ShortcutRecorder.swift */; };
-		A1B2C3D4E5F6A7B800000003 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B800000004 /* APIClient.swift */; };
-		A1B2C3D4E5F6A7B800000005 /* AppRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B800000006 /* AppRegistry.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -90,13 +92,13 @@
 		647ADAA51F8E8D8761F64590 /* AudioWaveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioWaveView.swift; sourceTree = "<group>"; };
 		677E97A6B332076DF0419B42 /* MumbleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MumbleApp.swift; sourceTree = "<group>"; };
 		69F45C367130A6546FD3E403 /* ToneMappingConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneMappingConfigTests.swift; sourceTree = "<group>"; };
-		F0A1B2C3D4E5F6A7B8C9D0E1 /* FormattingCategoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingCategoryTests.swift; sourceTree = "<group>"; };
 		6B7DEA48625C09A88BE728F9 /* OnboardingViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModelTests.swift; sourceTree = "<group>"; };
 		6EC31C5BA1C432FDC074B278 /* ToneSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneSetupView.swift; sourceTree = "<group>"; };
 		70C4F7FB5626BC535314179F /* ToneProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneProfile.swift; sourceTree = "<group>"; };
 		75D59DEB149D775F191EE556 /* HomeTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTabView.swift; sourceTree = "<group>"; };
 		77531A7C3F3E1ADED5BBE849 /* AppContextDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContextDetectorTests.swift; sourceTree = "<group>"; };
 		784B6DD36ECB1754CA10EEA0 /* TranscriptionParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionParserTests.swift; sourceTree = "<group>"; };
+		7DBDA956AC78DBF36BF37AAE /* AppRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRegistry.swift; sourceTree = "<group>"; };
 		7F240C84375B3DABB307DCFB /* GroqTranscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroqTranscriptionService.swift; sourceTree = "<group>"; };
 		8315B492BC2A8377EBE6380F /* StartupPreferenceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupPreferenceView.swift; sourceTree = "<group>"; };
 		871FF303988D2B12F6E07515 /* TranscriptionModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionModels.swift; sourceTree = "<group>"; };
@@ -105,12 +107,11 @@
 		8E04DB5EFE4532DE032B8384 /* ToneTransformerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneTransformerTests.swift; sourceTree = "<group>"; };
 		8EE95F7B9008235FDBF30003 /* AppContextDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContextDetector.swift; sourceTree = "<group>"; };
 		9CA9FE562B2261B460CBCAF0 /* SettingsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTabView.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F6A7B800000002 /* ShortcutRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRecorder.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F6A7B800000004 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F6A7B800000006 /* AppRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRegistry.swift; sourceTree = "<group>"; };
+		A7D2837FC063A5971658AD39 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		AA4D62FE94608BCC954854C6 /* PermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionManager.swift; sourceTree = "<group>"; };
 		AC3F55AC94830D252804C03E /* ShortcutBindingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutBindingTests.swift; sourceTree = "<group>"; };
 		B6A682C63C3FEECB30D646F1 /* LoginItemManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemManager.swift; sourceTree = "<group>"; };
+		B6A6D8EDD90EB3A8DE48A190 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		C52684582F46D44054514F77 /* OnboardingCompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCompleteView.swift; sourceTree = "<group>"; };
 		C65E992585E5FD5BE7B2CE10 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		C84670A242DE8A79BD9AD60D /* ToneTransformer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneTransformer.swift; sourceTree = "<group>"; };
@@ -120,11 +121,24 @@
 		DA79D24EC874A899FBF280B5 /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
 		DACC205211D4B52482F6F602 /* DictationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictationManager.swift; sourceTree = "<group>"; };
 		DEF2F11108BBD2D74B189CCF /* FormattingContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingContext.swift; sourceTree = "<group>"; };
+		E32F54C444A6795CF67B83C8 /* ShortcutRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRecorder.swift; sourceTree = "<group>"; };
 		EBEB95095F3FF1A872DF7EEF /* MumbleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MumbleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F07FE3168ABBCF70175B3800 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F56EFC1EAFB50A5B1AC8B667 /* Mumble.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mumble.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7A48AB9153C743F1B8C9CAA /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		FDF4AA0439B4BA050DC1E60F /* FormattingCategoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingCategoryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3D35EE6DE78DA870EAFCAF47 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2F62C2D5A85D151E4136E19A /* TelemetryDeck in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		01A9030DD0F13217B5CF648F /* Dictation */ = {
@@ -184,7 +198,7 @@
 			isa = PBXGroup;
 			children = (
 				77531A7C3F3E1ADED5BBE849 /* AppContextDetectorTests.swift */,
-				F0A1B2C3D4E5F6A7B8C9D0E1 /* FormattingCategoryTests.swift */,
+				FDF4AA0439B4BA050DC1E60F /* FormattingCategoryTests.swift */,
 				6B7DEA48625C09A88BE728F9 /* OnboardingViewModelTests.swift */,
 				04E2D5DE33F6B667F81D8D33 /* PermissionStateTests.swift */,
 				AC3F55AC94830D252804C03E /* ShortcutBindingTests.swift */,
@@ -208,7 +222,7 @@
 			isa = PBXGroup;
 			children = (
 				8EE95F7B9008235FDBF30003 /* AppContextDetector.swift */,
-				A1B2C3D4E5F6A7B800000006 /* AppRegistry.swift */,
+				7DBDA956AC78DBF36BF37AAE /* AppRegistry.swift */,
 			);
 			path = Context;
 			sourceTree = "<group>";
@@ -224,14 +238,15 @@
 		6442534DD50F1A68A72DD154 /* Infrastructure */ = {
 			isa = PBXGroup;
 			children = (
-				A1B2C3D4E5F6A7B800000004 /* APIClient.swift */,
+				A7D2837FC063A5971658AD39 /* Analytics.swift */,
+				B6A6D8EDD90EB3A8DE48A190 /* APIClient.swift */,
 				121D37A1D5CF90BA091DF00A /* KeychainManager.swift */,
 				14EBD1A6A93DC01E4557FC1C /* Logger.swift */,
 				B6A682C63C3FEECB30D646F1 /* LoginItemManager.swift */,
 				AA4D62FE94608BCC954854C6 /* PermissionManager.swift */,
 				14164098C6452D81BCF8EDDA /* ShortcutBinding.swift */,
 				3792E0B543F3716674CBC002 /* ShortcutMonitor.swift */,
-				A1B2C3D4E5F6A7B800000002 /* ShortcutRecorder.swift */,
+				E32F54C444A6795CF67B83C8 /* ShortcutRecorder.swift */,
 				362998EC504F5B8B460B180E /* TextInserter.swift */,
 			);
 			path = Infrastructure;
@@ -308,6 +323,7 @@
 			buildPhases = (
 				38CA59D3BB2EDA15F2C1393B /* Sources */,
 				185BF2AC2D168B3A26CA167F /* Resources */,
+				3D35EE6DE78DA870EAFCAF47 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -315,6 +331,7 @@
 			);
 			name = Mumble;
 			packageProductDependencies = (
+				70606E58927A57EF7736E371 /* TelemetryDeck */,
 			);
 			productName = Mumble;
 			productReference = F56EFC1EAFB50A5B1AC8B667 /* Mumble.app */;
@@ -357,6 +374,9 @@
 			);
 			mainGroup = E7582EA0BECBD24B5EA300C9;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C7F1855B2E231C85F8A44DFE /* XCRemoteSwiftPackageReference "SwiftSDK" */,
+			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
@@ -383,11 +403,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5FE36878CA401C9C9B275571 /* APIClient.swift in Sources */,
 				8849297367792BBE5C1A80C3 /* APIKeySetupView.swift in Sources */,
-				A1B2C3D4E5F6A7B800000003 /* APIClient.swift in Sources */,
+				7EB53DB7DE4DC4B2CFB7A005 /* Analytics.swift in Sources */,
 				1745D80B6A856558DCF08803 /* AppContextDetector.swift in Sources */,
-				A1B2C3D4E5F6A7B800000005 /* AppRegistry.swift in Sources */,
 				78514BBC5B24A40CC47A1570 /* AppDelegate.swift in Sources */,
+				78971A500727A5C25875B4E8 /* AppRegistry.swift in Sources */,
 				5275B9DF50062D3454EF7782 /* AudioRecorder.swift in Sources */,
 				0BF45AAB33C78FDEAC25E7F8 /* AudioWaveView.swift in Sources */,
 				E44E1265D10008D139AF8454 /* DictationHUD.swift in Sources */,
@@ -412,7 +433,7 @@
 				6203291560890A2D7523BB9C /* SettingsViewModel.swift in Sources */,
 				158D56FAB364DB87EC553AFD /* ShortcutBinding.swift in Sources */,
 				D68106A2756E8FDA1FAAC378 /* ShortcutMonitor.swift in Sources */,
-				A1B2C3D4E5F6A7B800000001 /* ShortcutRecorder.swift in Sources */,
+				2E30345F4DCBF1D8FAFF0A61 /* ShortcutRecorder.swift in Sources */,
 				45C8EE9E862220FBFAEF403F /* ShortcutSetupView.swift in Sources */,
 				C10F4A83DB5375A94BDB2C84 /* ShortcutTabView.swift in Sources */,
 				72B687071816C1CB0CFE0C33 /* SoundPlayer.swift in Sources */,
@@ -432,7 +453,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6F3437D350181A8A70F0431C /* AppContextDetectorTests.swift in Sources */,
-				F0B2C3D4E5F6A7B8C9D0E1F2 /* FormattingCategoryTests.swift in Sources */,
+				9212F8D5312A9D07734BCC45 /* FormattingCategoryTests.swift in Sources */,
 				628C63F83C831DC1F5EC87A2 /* OnboardingViewModelTests.swift in Sources */,
 				8283E0E287C0FBA1C5798C6E /* PermissionStateTests.swift in Sources */,
 				FEBE01C80EEB5F8E5C8A1678 /* ShortcutBindingTests.swift in Sources */,
@@ -683,6 +704,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C7F1855B2E231C85F8A44DFE /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		70606E58927A57EF7736E371 /* TelemetryDeck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C7F1855B2E231C85F8A44DFE /* XCRemoteSwiftPackageReference "SwiftSDK" */;
+			productName = TelemetryDeck;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0A9AB9EB9E42FB89670D4724 /* Project object */;
 }

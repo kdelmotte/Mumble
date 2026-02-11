@@ -44,6 +44,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
 
+        // 0. Initialise analytics.
+        Analytics.configure()
+
+        let isFirstLaunch = !appState.hasCompletedOnboarding
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+        Analytics.send(.appLaunched, parameters: [
+            "isFirstLaunch": String(isFirstLaunch),
+            "appVersion": appVersion
+        ])
+
         // 1. Decide activation policy up-front. During onboarding we use
         //    .regular so macOS treats our windows like a normal app (the TCC
         //    permission dialog won't cause them to vanish). Once onboarding
@@ -182,6 +192,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// NSWindow + NSHostingController because the SwiftUI Settings scene
     /// doesn't open reliably in `.accessory` activation mode.
     func showSettingsWindow() {
+        Analytics.send(.settingsOpened)
+
         // If the window already exists, just bring it forward.
         if let existing = settingsWindow {
             existing.makeKeyAndOrderFront(nil)
@@ -297,6 +309,13 @@ extension AppDelegate: NSWindowDelegate {
         guard let window = notification.object as? NSWindow else { return }
 
         if window === onboardingWindow {
+            // Track abandonment if onboarding wasn't completed yet.
+            if !appState.hasCompletedOnboarding {
+                Analytics.send(.onboardingAbandoned, parameters: [
+                    "lastStepSeen": String(Analytics.lastOnboardingStepSeen)
+                ])
+            }
+
             appState.isOnboardingWindowOpen = false
             onboardingWindow = nil
 

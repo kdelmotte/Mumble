@@ -1,5 +1,10 @@
 name: Mumble
 
+packages:
+  TelemetryDeck:
+    url: https://github.com/TelemetryDeck/SwiftSDK
+    majorVersion: 2.0.0
+
 options:
   bundleIdPrefix: com.mumble
   deploymentTarget:
@@ -23,6 +28,8 @@ targets:
       path: Mumble/Info.plist
     entitlements:
       path: Mumble/Mumble.entitlements
+    dependencies:
+      - package: TelemetryDeck
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mumble.app

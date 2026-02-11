@@ -54,11 +54,29 @@ struct HomeTabView: View {
                             }
                         }
                     }
+
+                    Section {
+                        Toggle("Send anonymous usage data", isOn: analyticsEnabled)
+                        Text("Helps improve Mumble. No personal data is collected.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .formStyle(.grouped)
                 .scrollDisabled(true)
             }
             .padding(.top, 20)
         }
+    }
+
+    // MARK: - Analytics Opt-Out Binding
+
+    /// Two-way binding that inverts `Analytics.isOptedOut` so the toggle reads
+    /// as "enabled = sending data".
+    private var analyticsEnabled: Binding<Bool> {
+        Binding(
+            get: { !Analytics.isOptedOut },
+            set: { Analytics.isOptedOut = !$0 }
+        )
     }
 }

@@ -315,6 +315,12 @@ final class DictationManager: ObservableObject {
             // Increment the lifetime transcription counter.
             transcriptionCount += 1
 
+            Analytics.send(.dictationCompleted, parameters: [
+                "charCount": String(finalText.count),
+                "usedLLMFormatting": String(FormattingConfig.isLLMFormattingEnabled),
+                "toneProfile": toneProfile.displayName
+            ])
+
             logger.info("DictationManager: text inserted, total transcriptions = \(transcriptionCount)")
 
             // Dismiss the HUD.
@@ -323,6 +329,10 @@ final class DictationManager: ObservableObject {
         } catch {
             let errorDescription = (error as? TranscriptionError)?.errorDescription
                 ?? error.localizedDescription
+
+            Analytics.send(.transcriptionFailed, parameters: [
+                "errorType": String(describing: type(of: error))
+            ])
 
             logger.error("DictationManager: transcription failed - \(errorDescription)")
             lastError = errorDescription
@@ -359,6 +369,9 @@ final class DictationManager: ObservableObject {
             logger.info("DictationManager: LLM formatting succeeded (category: \(category))")
             return formatted
         } catch {
+            Analytics.send(.llmFormattingFailed, parameters: [
+                "errorType": String(describing: type(of: error))
+            ])
             logger.warning("DictationManager: LLM formatting failed, falling back to rule-based - \(error.localizedDescription)")
             return applyToneTransformation(text, tone: tone)
         }

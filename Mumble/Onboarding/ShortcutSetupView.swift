@@ -109,6 +109,16 @@ struct ShortcutSetupView: View {
                 .padding(8)
                 .background(Color(nsColor: .textBackgroundColor))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(alignment: .topLeading) {
+                    if viewModel.demoText.isEmpty {
+                        Text("Hey, I'm ready to start mumbling.")
+                            .font(.body)
+                            .foregroundStyle(.tertiary)
+                            .padding(.horizontal, 11)
+                            .padding(.vertical, 12)
+                            .allowsHitTesting(false)
+                    }
+                }
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)

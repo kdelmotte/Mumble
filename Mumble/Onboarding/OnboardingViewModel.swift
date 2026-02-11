@@ -96,6 +96,13 @@ final class OnboardingViewModel: ObservableObject {
                 self?.objectWillChange.send()
             }
 
+        // Track initial step view (goToNextStep isn't called for step 0).
+        Analytics.send(.onboardingStepViewed, parameters: [
+            "step": "0",
+            "stepName": Self.stepName(for: 0)
+        ])
+        Analytics.lastOnboardingStepSeen = 0
+
         // Auto-validate API key with debounce
         self.apiKeyCancellable = $apiKey
             .dropFirst()
@@ -123,6 +130,12 @@ final class OnboardingViewModel: ObservableObject {
     func goToNextStep() {
         guard canGoForward else { return }
         currentStep += 1
+
+        Analytics.send(.onboardingStepViewed, parameters: [
+            "step": String(currentStep),
+            "stepName": Self.stepName(for: currentStep)
+        ])
+        Analytics.lastOnboardingStepSeen = currentStep
     }
 
     func goToPreviousStep() {
@@ -271,10 +284,28 @@ final class OnboardingViewModel: ObservableObject {
         // Mark onboarding as complete
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
 
+        Analytics.send(.onboardingCompleted, parameters: [
+            "launchAtLogin": String(launchAtLogin)
+        ])
+
         // Notify the app (AppDelegate and OnboardingContainerView listen for this)
         NotificationCenter.default.post(name: .onboardingDidComplete, object: nil)
 
         logger.info("Onboarding completed successfully")
+    }
+
+    // MARK: - Step Names
+
+    static func stepName(for step: Int) -> String {
+        switch step {
+        case 0: return "Permissions"
+        case 1: return "APIKey"
+        case 2: return "Shortcut"
+        case 3: return "Tone"
+        case 4: return "Startup"
+        case 5: return "Complete"
+        default: return "Unknown"
+        }
     }
 
     // MARK: - Helpers

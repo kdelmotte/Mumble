@@ -64,19 +64,7 @@ struct StartupPreferenceView: View {
                     .font(.system(size: 14))
                     .foregroundStyle(.secondary)
 
-                Text("Mumble runs quietly in your menu bar. It uses minimal resources when idle.")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            }
-
-            Divider()
-
-            HStack(spacing: 10) {
-                Image(systemName: "info.circle")
-                    .font(.system(size: 14))
-                    .foregroundStyle(.secondary)
-
-                Text("You can change this later in Settings.")
+                Text("Mumble runs quietly in your menu bar using minimal resources. You can change this later in Settings.")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }

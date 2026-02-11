@@ -99,7 +99,12 @@ final class SettingsViewModel: ObservableObject {
 
     /// Whether LLM-based smart formatting is enabled.
     @Published var isLLMFormattingEnabled: Bool = FormattingConfig.isLLMFormattingEnabled {
-        didSet { FormattingConfig.isLLMFormattingEnabled = isLLMFormattingEnabled }
+        didSet {
+            FormattingConfig.isLLMFormattingEnabled = isLLMFormattingEnabled
+            Analytics.send(.llmFormattingToggled, parameters: [
+                "enabled": String(isLLMFormattingEnabled)
+            ])
+        }
     }
 
     // MARK: - Tone Config State
