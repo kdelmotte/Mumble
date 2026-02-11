@@ -73,9 +73,14 @@ enum FormattingCategory {
     // MARK: - System Prompt Generation
 
     /// Builds a complete system prompt for the LLM, combining shared base rules,
-    /// context-specific instructions, and tone-specific guidance.
-    func systemPrompt(for tone: ToneProfile) -> String {
-        return [baseRules, contextRules, toneRules(for: tone)].joined(separator: "\n\n")
+    /// context-specific instructions, tone-specific guidance, and an optional
+    /// vocabulary correction section.
+    func systemPrompt(for tone: ToneProfile, vocabularySection: String? = nil) -> String {
+        var sections = [baseRules, contextRules, toneRules(for: tone)]
+        if let vocabularySection {
+            sections.append(vocabularySection)
+        }
+        return sections.joined(separator: "\n\n")
     }
 
     // MARK: - Base Rules (shared across all contexts)

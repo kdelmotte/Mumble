@@ -76,7 +76,7 @@ struct PermissionsCheckView: View {
                 .font(.system(size: 16))
                 .foregroundStyle(.green)
 
-            Text("Audio is sent to Groq for transcription. No data is stored.")
+            Text("Audio is sent to your own Groq instance for transcription. No data is stored.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }

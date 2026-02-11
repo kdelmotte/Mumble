@@ -40,19 +40,8 @@ Just grab a free API key from [console.groq.com](https://console.groq.com) and y
 - **Blazing fast transcription** — powered by Groq's `whisper-large-v3` for maximum accuracy at incredible speed.
 - **Zero clutter** — lives in the menu bar, no Dock icon, no windows in your way.
 - **Guided setup** — onboarding walks you through API key, permissions, and preferences.
-
-## Smart Formatting
-
-Mumble doesn't just transcribe — it formats. An LLM pass automatically structures your dictation based on the active app:
-
-| Context | What it does |
-|---|---|
-| **Email** (Gmail, Outlook, Apple Mail) | Structures greeting / body / sign-off with proper paragraph flow |
-| **Messaging** (Slack, iMessage, Discord) | Keeps text casual, converts spoken emoji names to symbols |
-| **Code** (VS Code, Xcode, Terminal) | Preserves technical terms, avoids autocorrect-style changes |
-| **General** (everything else) | Clean sentences with standard punctuation |
-
-Context is detected from the frontmost app's bundle ID and, for browsers, the page title. Smart formatting is enabled by default and can be toggled off in Settings.
+- **Custom dictionary** — add vocabulary corrections so Mumble always spells your names, jargon, and brand terms the right way.
+- **Smart formatting** — an LLM pass automatically structures your dictation based on the active app (email gets greeting/body/sign-off, messaging stays casual with emoji, code preserves technical terms, and everything else gets clean punctuation). Detected from the frontmost app's bundle ID and page title; toggleable in Settings.
 
 ## Getting Started
 

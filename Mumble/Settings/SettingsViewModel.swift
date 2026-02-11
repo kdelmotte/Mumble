@@ -112,6 +112,11 @@ final class SettingsViewModel: ObservableObject {
     /// The user's per-group tone mapping configuration.
     @Published var toneMappingConfig: ToneMappingConfig = .load()
 
+    // MARK: - Vocabulary Config State
+
+    /// The user's custom vocabulary (spoken→corrected word pairs).
+    @Published var vocabularyConfig: VocabularyConfig = .load()
+
     // MARK: - Shortcut Recording
 
     private let shortcutRecorder = ShortcutRecorder()
@@ -277,6 +282,23 @@ final class SettingsViewModel: ObservableObject {
                 self?.toneMappingConfig.save()
             }
         )
+    }
+
+    // MARK: - Vocabulary Config
+
+    /// Appends a new empty vocabulary entry.
+    func addVocabularyEntry() {
+        vocabularyConfig.entries.append(VocabularyEntry())
+    }
+
+    /// Removes a vocabulary entry by its ID.
+    func removeVocabularyEntry(id: UUID) {
+        vocabularyConfig.entries.removeAll { $0.id == id }
+    }
+
+    /// Persists the current vocabulary config to UserDefaults.
+    func saveVocabularyConfig() {
+        vocabularyConfig.save()
     }
 
 }

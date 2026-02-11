@@ -32,10 +32,17 @@ final class KeychainManager {
 
     static let shared = KeychainManager()
 
-    private let service = "com.mumble.apikey"
-    private let account = "api-key"
+    let service: String
+    let account: String
 
-    private init() {}
+    init(service: String, account: String) {
+        self.service = service
+        self.account = account
+    }
+
+    private convenience init() {
+        self.init(service: "com.mumble.apikey", account: "api-key")
+    }
 
     // MARK: - Public API
 

@@ -280,6 +280,9 @@ final class DictationManager: ObservableObject {
         let appContext = appContextDetector.detectFrontmostApp()
         let toneProfile = toneForApp(appContext)
 
+        // Load custom vocabulary config.
+        let vocabularyConfig = VocabularyConfig.load()
+
         logger.debug("DictationManager: app context = \(appContext.appName ?? "Unknown"), tone = \(toneProfile.displayName)")
 
         do {
@@ -304,9 +307,16 @@ final class DictationManager: ObservableObject {
             // Apply formatting (LLM-based or rule-based).
             let finalText: String
             if FormattingConfig.isLLMFormattingEnabled {
-                finalText = await formatWithLLM(rawTranscript, appContext: appContext, tone: toneProfile, apiKey: apiKey)
+                finalText = await formatWithLLM(
+                    rawTranscript,
+                    appContext: appContext,
+                    tone: toneProfile,
+                    apiKey: apiKey,
+                    vocabularySection: vocabularyConfig.llmPromptSection
+                )
             } else {
-                finalText = applyToneTransformation(rawTranscript, tone: toneProfile)
+                let toneFormatted = applyToneTransformation(rawTranscript, tone: toneProfile)
+                finalText = VocabularyReplacer.apply(vocabularyConfig.validEntries, to: toneFormatted)
             }
 
             // Insert text at the cursor position.
@@ -353,10 +363,11 @@ final class DictationManager: ObservableObject {
         _ text: String,
         appContext: AppContext,
         tone: ToneProfile,
-        apiKey: String
+        apiKey: String,
+        vocabularySection: String? = nil
     ) async -> String {
         let category = FormattingCategory.classify(appContext)
-        let systemPrompt = category.systemPrompt(for: tone)
+        let systemPrompt = category.systemPrompt(for: tone, vocabularySection: vocabularySection)
 
         logger.info("DictationManager: formatting category = \(category), bundleID = \(appContext.bundleIdentifier ?? "nil"), windowTitle = \(appContext.windowTitle ?? "nil")")
 

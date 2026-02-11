@@ -109,7 +109,7 @@ struct APIKeySetupView: View {
                     .font(.system(size: 18))
                     .foregroundStyle(.green)
 
-                Text("Key valid! Your API key has been saved securely.")
+                Text("Key valid! Your API key has been saved securely to your local Keychain.")
                     .font(.callout)
                     .foregroundStyle(.green)
 

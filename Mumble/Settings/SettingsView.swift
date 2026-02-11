@@ -13,34 +13,38 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     case settings
     case shortcut
     case tone
+    case vocabulary
 
     var id: String { rawValue }
 
     var label: String {
         switch self {
-        case .home:     return "Home"
-        case .settings: return "Settings"
-        case .shortcut: return "Shortcut"
-        case .tone:     return "Tone"
+        case .home:       return "Home"
+        case .settings:   return "Settings"
+        case .shortcut:   return "Shortcut"
+        case .tone:       return "Tone"
+        case .vocabulary: return "Vocabulary"
         }
     }
 
     var systemImage: String {
         switch self {
-        case .home:     return "house"
-        case .settings: return "gearshape"
-        case .shortcut: return "keyboard"
-        case .tone:     return "waveform"
+        case .home:       return "house"
+        case .settings:   return "gearshape"
+        case .shortcut:   return "keyboard"
+        case .tone:       return "waveform"
+        case .vocabulary: return "character.book.closed"
         }
     }
 
     /// Asset catalog image name for the mascot header.
     var headerImageName: String {
         switch self {
-        case .home:     return "MumbleIconHome"
-        case .settings: return "MumbleIconSettings"
-        case .shortcut: return "MumbleIconShortcut"
-        case .tone:     return "MumbleIconTone"
+        case .home:       return "MumbleIconHome"
+        case .settings:   return "MumbleIconSettings"
+        case .shortcut:   return "MumbleIconShortcut"
+        case .tone:       return "MumbleIconTone"
+        case .vocabulary: return "MumbleIconVocabulary"
         }
     }
 }
@@ -70,6 +74,8 @@ struct SettingsView: View {
                 ShortcutTabView(viewModel: viewModel)
             case .tone:
                 ToneTabView(viewModel: viewModel)
+            case .vocabulary:
+                VocabularyTabView(viewModel: viewModel)
             }
         }
     }

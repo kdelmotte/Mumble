@@ -98,10 +98,10 @@ final class LLMFormattingService {
         return try parseResponse(data: data, statusCode: statusCode, originalTranscript: transcript)
     }
 
-    // MARK: - Private Helpers
+    // MARK: - Internal Helpers
 
     /// Builds the JSON request body for the Chat Completions API.
-    private func buildRequestBody(transcript: String, systemPrompt: String) throws -> Data {
+    func buildRequestBody(transcript: String, systemPrompt: String) throws -> Data {
         let body: [String: Any] = [
             "model": model,
             "temperature": temperature,
@@ -116,7 +116,7 @@ final class LLMFormattingService {
     }
 
     /// Parses the Chat Completions response and extracts the formatted text.
-    private func parseResponse(data: Data, statusCode: Int, originalTranscript: String) throws -> String {
+    func parseResponse(data: Data, statusCode: Int, originalTranscript: String) throws -> String {
         logger.debug("LLMFormattingService: response status \(statusCode)")
 
         guard statusCode == 200 else {
@@ -151,7 +151,7 @@ final class LLMFormattingService {
 
     /// Validates that the LLM output is a reasonable formatting of the input
     /// rather than a conversational response or hallucination.
-    private func validateOutput(_ output: String, originalTranscript: String) throws {
+    func validateOutput(_ output: String, originalTranscript: String) throws {
         let outputWords = output.split(whereSeparator: { $0.isWhitespace }).count
         let inputWords = max(originalTranscript.split(whereSeparator: { $0.isWhitespace }).count, 1)
 
@@ -168,7 +168,7 @@ final class LLMFormattingService {
 // MARK: - Chat Completion Response Models
 
 /// Minimal Codable models for the Groq/OpenAI Chat Completions response.
-private struct ChatCompletionResponse: Decodable {
+struct ChatCompletionResponse: Decodable {
     let choices: [Choice]
 
     struct Choice: Decodable {

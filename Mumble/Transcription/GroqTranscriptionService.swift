@@ -23,7 +23,8 @@ final class GroqTranscriptionService {
     // MARK: - Public API
 
     /// Transcribes the provided audio data and returns the recognized text.
-    func transcribe(audioData: Data, apiKey: String) async throws -> String {
+    /// - Parameter prompt: Optional prompt hint (e.g. vocabulary corrections) to bias Whisper towards correct spellings.
+    func transcribe(audioData: Data, apiKey: String, prompt: String? = nil) async throws -> String {
         guard !apiKey.isEmpty else {
             throw TranscriptionError.noAPIKey
         }
@@ -37,7 +38,8 @@ final class GroqTranscriptionService {
             boundary: boundary,
             audioData: audioData,
             model: defaultModel,
-            responseFormat: "json"
+            responseFormat: "json",
+            prompt: prompt
         )
 
         let request = apiClient.buildRequest(
@@ -69,12 +71,13 @@ final class GroqTranscriptionService {
     }
 
     /// Transcribes audio with automatic retry and exponential backoff for transient errors.
-    func transcribeWithRetry(audioData: Data, apiKey: String, maxRetries: Int = 2) async throws -> String {
+    /// - Parameter prompt: Optional prompt hint (e.g. vocabulary corrections) to bias Whisper towards correct spellings.
+    func transcribeWithRetry(audioData: Data, apiKey: String, prompt: String? = nil, maxRetries: Int = 2) async throws -> String {
         var lastError: Error?
 
         for attempt in 0...maxRetries {
             do {
-                let text = try await transcribe(audioData: audioData, apiKey: apiKey)
+                let text = try await transcribe(audioData: audioData, apiKey: apiKey, prompt: prompt)
                 return text
             } catch let error as TranscriptionError {
                 lastError = error
@@ -158,7 +161,7 @@ final class GroqTranscriptionService {
     // MARK: - Private Helpers
 
     /// Parses the HTTP response from the transcription endpoint.
-    private func parseResponse(data: Data, statusCode: Int) throws -> String {
+    func parseResponse(data: Data, statusCode: Int) throws -> String {
         logger.debug("Transcription response status: \(statusCode)")
 
         switch statusCode {
@@ -193,12 +196,13 @@ final class GroqTranscriptionService {
     }
 
     /// Builds a `multipart/form-data` body containing the audio file and text fields.
-    private func buildMultipartBody(
+    func buildMultipartBody(
         boundary: String,
         audioData: Data,
         model: String,
         responseFormat: String,
-        language: String? = nil
+        language: String? = nil,
+        prompt: String? = nil
     ) -> Data {
         var body = Data()
 
@@ -230,6 +234,13 @@ final class GroqTranscriptionService {
             append("--\(boundary)\r\n")
             append("Content-Disposition: form-data; name=\"language\"\r\n\r\n")
             append("\(language)\r\n")
+        }
+
+        // Optional prompt field (vocabulary hints).
+        if let prompt {
+            append("--\(boundary)\r\n")
+            append("Content-Disposition: form-data; name=\"prompt\"\r\n\r\n")
+            append("\(prompt)\r\n")
         }
 
         // Closing boundary.
