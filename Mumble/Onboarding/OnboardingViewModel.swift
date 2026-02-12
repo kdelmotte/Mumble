@@ -70,6 +70,7 @@ final class OnboardingViewModel: ObservableObject {
     private var validationTask: Task<Void, Never>?
 
     static let totalSteps = 6
+    private static let groqAPIKeyPrefix = "gsk_"
 
     // MARK: - Init
 
@@ -183,7 +184,7 @@ final class OnboardingViewModel: ObservableObject {
     // MARK: - API Key
 
     private func hasValidKeyFormat(_ key: String) -> Bool {
-        key.hasPrefix("gsk_") && key.count >= 20
+        key.hasPrefix(Self.groqAPIKeyPrefix) && key.count >= 20
     }
 
     private func handleAPIKeyChange() {
@@ -196,8 +197,8 @@ final class OnboardingViewModel: ObservableObject {
 
         guard !trimmed.isEmpty else { return }
 
-        if !trimmed.hasPrefix("gsk_") && trimmed.count >= 4 {
-            keyTestResult = .failure("Groq API keys start with gsk_")
+        if !trimmed.hasPrefix(Self.groqAPIKeyPrefix) && trimmed.count >= 4 {
+            keyTestResult = .failure("Groq API keys start with \(Self.groqAPIKeyPrefix)")
             return
         }
 

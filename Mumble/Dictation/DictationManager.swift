@@ -69,9 +69,7 @@ final class DictationManager: ObservableObject {
         "subtitles by the amara.org community",
         "thanks for watching",
         "thank you for watching",
-        "thanks for watching!",
-        "thank you for watching!",
-        "thank you.",
+        "thank you",
         "bye",
         "bye bye",
         "bye-bye",
@@ -83,9 +81,30 @@ final class DictationManager: ObservableObject {
         "beeping",
     ]
 
+    /// Returns `true` when the text contains non-Latin script characters (Korean, Chinese, Japanese,
+    /// Arabic, Thai, etc.). Whisper frequently hallucinates in these scripts when given silent audio,
+    /// so any such output at low audio levels is almost certainly not real speech.
+    private static func containsNonLatinScript(_ text: String) -> Bool {
+        // Strip whitespace/punctuation so we only inspect actual content characters.
+        let content = text.unicodeScalars.filter { CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters).inverted.contains($0) }
+        guard !content.isEmpty else { return false }
+
+        let nonLatin = CharacterSet.letters.subtracting(
+            CharacterSet(charactersIn: Unicode.Scalar("A")...Unicode.Scalar("z"))
+                .union(CharacterSet(charactersIn: Unicode.Scalar(0x00C0)...Unicode.Scalar(0x024F)))  // Latin Extended (accented chars)
+        )
+
+        let nonLatinCount = content.filter { nonLatin.contains($0) }.count
+        // If more than half the content characters are non-Latin, flag it.
+        return Double(nonLatinCount) / Double(content.count) > 0.5
+    }
+
     /// Peak audio level below which transcription results are checked against `whisperHallucinations`.
     /// Above this level the user was clearly speaking, so even short phrases like "bye" are trusted.
     private static let hallucinationAudioCeiling: Float = 0.05
+
+    /// Peak audio level below which the recording is considered silent and transcription is skipped entirely.
+    private static let silentRecordingThreshold: Float = 0.025
 
     // MARK: - Initialisation
 
@@ -243,7 +262,7 @@ final class DictationManager: ObservableObject {
         let audioData = audioRecorder.stopRecording()
 
         // 1a. Skip transcription if the recording was silent (prevents Whisper hallucinations).
-        if audioRecorder.peakAudioLevel < 0.025 {
+        if audioRecorder.peakAudioLevel < Self.silentRecordingThreshold {
             audioLevelCancellable?.cancel()
             audioLevelCancellable = nil
             soundPlayer.playEndSound()
@@ -330,11 +349,17 @@ final class DictationManager: ObservableObject {
             // (suspicious zone between silence threshold and clear speech).
             let trimmed = rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
             let cleaned = trimmed.lowercased().trimmingCharacters(in: .punctuationCharacters)
-            if audioRecorder.peakAudioLevel < Self.hallucinationAudioCeiling,
-               Self.whisperHallucinations.contains(cleaned) {
-                logger.warning("DictationManager: filtered Whisper hallucination: \"\(trimmed)\"")
-                hud.showError("No speech detected")
-                return
+            if audioRecorder.peakAudioLevel < Self.hallucinationAudioCeiling {
+                if Self.whisperHallucinations.contains(cleaned) {
+                    logger.warning("DictationManager: filtered Whisper hallucination: \"\(trimmed)\"")
+                    hud.showError("No speech detected")
+                    return
+                }
+                if Self.containsNonLatinScript(trimmed) {
+                    logger.warning("DictationManager: filtered non-Latin hallucination: \"\(trimmed)\"")
+                    hud.showError("No speech detected")
+                    return
+                }
             }
 
             logger.info("DictationManager: transcription received (\(rawTranscript.count) chars)")
