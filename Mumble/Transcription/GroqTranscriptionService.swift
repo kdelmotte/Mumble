@@ -243,6 +243,11 @@ final class GroqTranscriptionService {
             append("\(prompt)\r\n")
         }
 
+        // Temperature 0 reduces hallucinations on silent/quiet audio.
+        append("--\(boundary)\r\n")
+        append("Content-Disposition: form-data; name=\"temperature\"\r\n\r\n")
+        append("0\r\n")
+
         // Closing boundary.
         append("--\(boundary)--\r\n")
 

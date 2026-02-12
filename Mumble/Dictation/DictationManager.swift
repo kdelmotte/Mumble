@@ -63,6 +63,30 @@ final class DictationManager: ObservableObject {
 
     private static let transcriptionCountKey = "com.mumble.transcriptionCount"
 
+    /// Known Whisper hallucination phrases produced from silence/noise.
+    /// Only checked when peak audio level is in the "suspicious" range (below `hallucinationAudioCeiling`).
+    private static let whisperHallucinations: Set<String> = [
+        "subtitles by the amara.org community",
+        "thanks for watching",
+        "thank you for watching",
+        "thanks for watching!",
+        "thank you for watching!",
+        "thank you.",
+        "bye",
+        "bye bye",
+        "bye-bye",
+        "you",
+        "the end",
+        "so",
+        "i'm sorry",
+        "beep",
+        "beeping",
+    ]
+
+    /// Peak audio level below which transcription results are checked against `whisperHallucinations`.
+    /// Above this level the user was clearly speaking, so even short phrases like "bye" are trusted.
+    private static let hallucinationAudioCeiling: Float = 0.05
+
     // MARK: - Initialisation
 
     init(
@@ -219,7 +243,7 @@ final class DictationManager: ObservableObject {
         let audioData = audioRecorder.stopRecording()
 
         // 1a. Skip transcription if the recording was silent (prevents Whisper hallucinations).
-        if audioRecorder.peakAudioLevel < 0.01 {
+        if audioRecorder.peakAudioLevel < 0.025 {
             audioLevelCancellable?.cancel()
             audioLevelCancellable = nil
             soundPlayer.playEndSound()
@@ -298,6 +322,17 @@ final class DictationManager: ObservableObject {
 
             guard !rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 logger.warning("DictationManager: transcription returned empty text")
+                hud.showError("No speech detected")
+                return
+            }
+
+            // Filter known Whisper hallucinations, but only when peak audio was low
+            // (suspicious zone between silence threshold and clear speech).
+            let trimmed = rawTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
+            let cleaned = trimmed.lowercased().trimmingCharacters(in: .punctuationCharacters)
+            if audioRecorder.peakAudioLevel < Self.hallucinationAudioCeiling,
+               Self.whisperHallucinations.contains(cleaned) {
+                logger.warning("DictationManager: filtered Whisper hallucination: \"\(trimmed)\"")
                 hud.showError("No speech detected")
                 return
             }

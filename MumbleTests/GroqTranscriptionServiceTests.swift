@@ -125,6 +125,19 @@ final class GroqTranscriptionServiceTests: XCTestCase {
         XCTAssertFalse(bodyString.contains("name=\"language\""), "Body should not contain language field when nil")
     }
 
+    func testBuildMultipartBody_containsTemperatureField() {
+        let body = service.buildMultipartBody(
+            boundary: boundary,
+            audioData: sampleAudio,
+            model: "whisper-large-v3",
+            responseFormat: "json"
+        )
+        let bodyString = String(data: body, encoding: .utf8)!
+
+        XCTAssertTrue(bodyString.contains("name=\"temperature\""), "Body should contain temperature field")
+        XCTAssertTrue(bodyString.contains("\r\n0\r\n"), "Temperature value should be 0")
+    }
+
     // MARK: - Response Parsing
 
     func testParseResponse_200_validJSON_returnsText() throws {
