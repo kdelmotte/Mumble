@@ -91,7 +91,7 @@ final class DictationManager: ObservableObject {
 
         let nonLatin = CharacterSet.letters.subtracting(
             CharacterSet(charactersIn: Unicode.Scalar("A")...Unicode.Scalar("z"))
-                .union(CharacterSet(charactersIn: Unicode.Scalar(0x00C0)...Unicode.Scalar(0x024F)))  // Latin Extended (accented chars)
+                .union(CharacterSet(charactersIn: Unicode.Scalar(0x00C0)!...Unicode.Scalar(0x024F)!))  // Latin Extended (accented chars)
         )
 
         let nonLatinCount = content.filter { nonLatin.contains($0) }.count

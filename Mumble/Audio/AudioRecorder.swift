@@ -132,8 +132,12 @@ final class AudioRecorder: ObservableObject {
             status = AudioObjectGetPropertyDataSize(deviceID, &inputAddress, 0, nil, &bufferListSize)
             guard status == noErr, bufferListSize > 0 else { continue }
 
-            let bufferListPointer = UnsafeMutablePointer<AudioBufferList>.allocate(capacity: 1)
-            defer { bufferListPointer.deallocate() }
+            let bufferListRaw = UnsafeMutableRawPointer.allocate(
+                byteCount: Int(bufferListSize),
+                alignment: MemoryLayout<AudioBufferList>.alignment
+            )
+            defer { bufferListRaw.deallocate() }
+            let bufferListPointer = bufferListRaw.bindMemory(to: AudioBufferList.self, capacity: 1)
             status = AudioObjectGetPropertyData(deviceID, &inputAddress, 0, nil, &bufferListSize, bufferListPointer)
             guard status == noErr else { continue }
 
