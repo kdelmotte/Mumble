@@ -14,6 +14,14 @@
   <br/>Exactly the way you wanted it.
 </p>
 
+<p align="center">
+  <a href="https://github.com/kdelmotte/Mumble/releases/latest">
+    <img src="https://img.shields.io/badge/Download_for_macOS-v1.0.0-blue?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS" />
+  </a>
+  <br/>
+  <sub>Signed &amp; notarized &middot; macOS 14+</sub>
+</p>
+
 ---
 
 ## Why Mumble?
@@ -45,7 +53,15 @@ Just grab a free API key from [console.groq.com](https://console.groq.com) and y
 
 ## Getting Started
 
-**You'll need:** macOS 14+ (Sonoma), Xcode 15+, and a free [Groq API key](https://console.groq.com/) (no credit card required).
+### Download
+
+Grab the latest release from [GitHub Releases](https://github.com/kdelmotte/Mumble/releases/latest) — the app is signed and notarized, so you can run it straight away. Requires **macOS 14+** (Sonoma) and a free [Groq API key](https://console.groq.com/) (no credit card required).
+
+The app will walk you through the rest.
+
+### Build from Source
+
+For contributors or if you prefer to build locally — you'll need Xcode 15+ and a free [Groq API key](https://console.groq.com/).
 
 ```bash
 brew install xcodegen          # one-time setup
@@ -53,8 +69,6 @@ cd /path/to/Mumble
 xcodegen generate              # generate the Xcode project
 open Mumble.xcodeproj          # Cmd+R to build and run
 ```
-
-The app will walk you through the rest.
 
 ## How It Works
 
