@@ -38,12 +38,12 @@ jobs:
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Developer ID Application" \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-            DSTROOT="$RUNNER_TEMP/build" \
+            SYMROOT="$RUNNER_TEMP/build" \
             | xcpretty
 
       - name: Verify code signature
         run: |
-          APP_PATH="$RUNNER_TEMP/build/Applications/Mumble.app"
+          APP_PATH="$RUNNER_TEMP/build/Release/Mumble.app"
           codesign --verify --deep --strict "$APP_PATH"
           codesign -d --verbose=2 "$APP_PATH" 2>&1 | grep -q "flags=0x10000(runtime)"
 
@@ -53,7 +53,7 @@ jobs:
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          APP_PATH="$RUNNER_TEMP/build/Applications/Mumble.app"
+          APP_PATH="$RUNNER_TEMP/build/Release/Mumble.app"
           ZIP_PATH="$RUNNER_TEMP/Mumble-notarize.zip"
 
           ditto -c -k --keepParent "$APP_PATH" "$ZIP_PATH"
@@ -66,12 +66,12 @@ jobs:
 
       - name: Staple notarization ticket
         run: |
-          APP_PATH="$RUNNER_TEMP/build/Applications/Mumble.app"
+          APP_PATH="$RUNNER_TEMP/build/Release/Mumble.app"
           xcrun stapler staple "$APP_PATH"
 
       - name: Package for release
         run: |
-          APP_PATH="$RUNNER_TEMP/build/Applications/Mumble.app"
+          APP_PATH="$RUNNER_TEMP/build/Release/Mumble.app"
           TAG="${GITHUB_REF_NAME}"
           RELEASE_ZIP="$RUNNER_TEMP/Mumble-${TAG}.zip"
           ditto -c -k --keepParent "$APP_PATH" "$RELEASE_ZIP"
