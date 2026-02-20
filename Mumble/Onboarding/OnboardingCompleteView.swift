@@ -147,7 +147,7 @@ struct OnboardingCompleteView: View {
         HStack(spacing: 10) {
             Image(systemName: "character.book.closed")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.accentColor)
+                .foregroundStyle(Color.accentColor)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Tip: Custom Vocabulary")
@@ -162,7 +162,7 @@ struct OnboardingCompleteView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(.accentColor.opacity(0.08))
+        .background(Color.accentColor.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
