@@ -67,7 +67,15 @@ jobs:
       - name: Staple notarization ticket
         run: |
           APP_PATH="$RUNNER_TEMP/build/Release/Mumble.app"
-          xcrun stapler staple "$APP_PATH"
+          for i in 1 2 3; do
+            if xcrun stapler staple "$APP_PATH"; then
+              exit 0
+            fi
+            echo "Staple attempt $i failed, waiting 15s for ticket propagation…"
+            sleep 15
+          done
+          echo "Stapling failed after 3 attempts"
+          exit 1
 
       - name: Package for release
         run: |
