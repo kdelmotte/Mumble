@@ -46,6 +46,11 @@ final class OnboardingViewModel: ObservableObject {
 
     @Published var toneMappingConfig: ToneMappingConfig = .load()
 
+    // MARK: - Microphone State
+
+    @AppStorage("selectedMicrophoneUID") var selectedMicUID: String = ""
+    @Published var availableMicDevices: [(name: String, uid: String)] = []
+
     // MARK: - Demo State
 
     @Published var demoText: String = ""
@@ -69,7 +74,7 @@ final class OnboardingViewModel: ObservableObject {
     private var apiKeyCancellable: AnyCancellable?
     private var validationTask: Task<Void, Never>?
 
-    static let totalSteps = 6
+    static let totalSteps = 7
     private static let groqAPIKeyPrefix = "gsk_"
 
     // MARK: - Init
@@ -155,15 +160,18 @@ final class OnboardingViewModel: ObservableObject {
             // API key step: require successful key test
             return keyTestResult == .success
         case 2:
-            // Shortcut setup: optional config, always allowed
+            // Microphone selection: optional, always allowed
             return true
         case 3:
-            // Tone setup: optional config, always allowed
+            // Shortcut setup: optional config, always allowed
             return true
         case 4:
-            // Startup preferences: always allowed
+            // Tone setup: optional config, always allowed
             return true
         case 5:
+            // Startup preferences: always allowed
+            return true
+        case 6:
             // Complete: always allowed
             return true
         default:
@@ -228,6 +236,8 @@ final class OnboardingViewModel: ObservableObject {
                 keyTestResult = .failure("Request timed out. Please try again.")
             case .rateLimited:
                 keyTestResult = .failure("Rate limited. Please wait a moment and try again.")
+            case .accessDenied:
+                keyTestResult = .failure("Access denied — Groq may be blocking your VPN or proxy. Try disconnecting it.")
             default:
                 keyTestResult = .failure(error.localizedDescription)
             }
@@ -301,12 +311,39 @@ final class OnboardingViewModel: ObservableObject {
         switch step {
         case 0: return "Permissions"
         case 1: return "APIKey"
-        case 2: return "Shortcut"
-        case 3: return "Tone"
-        case 4: return "Startup"
-        case 5: return "Complete"
+        case 2: return "Microphone"
+        case 3: return "Shortcut"
+        case 4: return "Tone"
+        case 5: return "Startup"
+        case 6: return "Complete"
         default: return "Unknown"
         }
+    }
+
+    // MARK: - Microphone Selection
+
+    /// Re-enumerates available audio input devices and validates the stored UID.
+    func refreshMicDevices() {
+        availableMicDevices = AudioRecorder().availableInputDevices()
+
+        // If the persisted UID no longer exists, fall back to system default.
+        if !selectedMicUID.isEmpty,
+           !availableMicDevices.contains(where: { $0.uid == selectedMicUID }) {
+            selectedMicUID = ""
+        }
+    }
+
+    /// Updates the selected microphone UID.
+    func selectMicDevice(uid: String) {
+        selectedMicUID = uid
+    }
+
+    /// Human-readable name of the selected mic for the summary screen.
+    var microphoneSummaryValue: String {
+        if selectedMicUID.isEmpty {
+            return "System Default"
+        }
+        return availableMicDevices.first(where: { $0.uid == selectedMicUID })?.name ?? "System Default"
     }
 
     // MARK: - Helpers
@@ -389,6 +426,11 @@ final class OnboardingViewModel: ObservableObject {
     private func startDemoRecording() {
         let recorder = AudioRecorder()
         demoAudioRecorder = recorder
+
+        // Apply the microphone the user selected in the onboarding mic step.
+        if !selectedMicUID.isEmpty {
+            try? recorder.selectInputDevice(uid: selectedMicUID)
+        }
 
         demoAudioLevelCancellable = recorder.$audioLevel
             .receive(on: RunLoop.main)

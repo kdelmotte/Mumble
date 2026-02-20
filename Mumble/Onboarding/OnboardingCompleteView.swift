@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - OnboardingCompleteView (Step 5)
+// MARK: - OnboardingCompleteView (Step 6)
 
 struct OnboardingCompleteView: View {
 
@@ -26,6 +26,7 @@ struct OnboardingCompleteView: View {
             if !viewModel.permissionManager.accessibilityGranted {
                 accessibilityWarning
             }
+
         }
     }
 
@@ -84,7 +85,7 @@ struct OnboardingCompleteView: View {
                 icon: "mic.fill",
                 iconColor: .red,
                 title: "Microphone",
-                value: viewModel.permissionManager.microphoneGranted ? "Granted" : "Not granted",
+                value: viewModel.microphoneSummaryValue,
                 statusColor: viewModel.permissionManager.microphoneGranted ? .green : .yellow
             )
 

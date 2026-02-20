@@ -51,6 +51,9 @@ final class MenuBarManager: NSObject {
     /// External callback invoked when the user selects "Settings...".
     var onOpenSettings: (() -> Void)?
 
+    /// External callback invoked when the user selects "Vocabulary...".
+    var onOpenVocabulary: (() -> Void)?
+
     /// Weak reference to a DictationManager to read the transcription count.
     weak var dictationManager: DictationManager?
 
@@ -127,6 +130,15 @@ final class MenuBarManager: NSObject {
         settingsItem.target = self
         newMenu.addItem(settingsItem)
 
+        // --- Vocabulary ---
+        let vocabularyItem = NSMenuItem(
+            title: "Vocabulary\u{2026}",
+            action: #selector(openVocabularyAction),
+            keyEquivalent: ""
+        )
+        vocabularyItem.target = self
+        newMenu.addItem(vocabularyItem)
+
         // --- About ---
         let aboutItem = NSMenuItem(
             title: "About Mumble",
@@ -156,6 +168,10 @@ final class MenuBarManager: NSObject {
 
     @objc private func openSettingsAction() {
         onOpenSettings?()
+    }
+
+    @objc private func openVocabularyAction() {
+        onOpenVocabulary?()
     }
 
     @objc private func openAboutAction() {

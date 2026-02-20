@@ -70,6 +70,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menuBar.onOpenSettings = { [weak self] in
             self?.showSettingsWindow()
         }
+        menuBar.onOpenVocabulary = { [weak self] in
+            self?.showSettingsWindow()
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .showVocabulary, object: nil)
+            }
+        }
         menuBar.setup()
         self.menuBarManager = menuBar
         appState.menuBarManager = menuBar
@@ -296,9 +302,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         STTLogger.shared.info("Onboarding completed -- transitioned to menu bar mode")
 
-        // Show Settings so the user can explore available options.
+        // Show Settings on the Vocabulary tab so the user discovers this feature.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             self?.showSettingsWindow()
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .showVocabulary, object: nil)
+            }
         }
     }
 }

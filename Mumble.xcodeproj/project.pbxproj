@@ -50,6 +50,7 @@
 		8C05A7CA87CAF556CDD99DF1 /* ToneProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70C4F7FB5626BC535314179F /* ToneProfile.swift */; };
 		905FF816144F5278C91EEE5A /* GroqTranscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F240C84375B3DABB307DCFB /* GroqTranscriptionService.swift */; };
 		9212F8D5312A9D07734BCC45 /* FormattingCategoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDF4AA0439B4BA050DC1E60F /* FormattingCategoryTests.swift */; };
+		97A1B2C3D4E5F6A7B8C9D0E1 /* MicrophoneSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B9C0D1E2F3A4B5C6D7E8F9 /* MicrophoneSelectionView.swift */; };
 		98F747D52CD9CD2EA6CA9E60 /* MenuBarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41F9FB9BD1CB4AD00EA6BED9 /* MenuBarManager.swift */; };
 		A4CCD1E421AE3AB04AC27B10 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14EBD1A6A93DC01E4557FC1C /* Logger.swift */; };
 		AE7A41D0C7B086A4D44D0A65 /* ToneTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E741ED2A84D27E16D150A46 /* ToneTabView.swift */; };
@@ -114,6 +115,7 @@
 		8315B492BC2A8377EBE6380F /* StartupPreferenceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupPreferenceView.swift; sourceTree = "<group>"; };
 		871FF303988D2B12F6E07515 /* TranscriptionModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionModels.swift; sourceTree = "<group>"; };
 		87B4178128C9318330DCC650 /* SoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPlayer.swift; sourceTree = "<group>"; };
+		A8B9C0D1E2F3A4B5C6D7E8F9 /* MicrophoneSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicrophoneSelectionView.swift; sourceTree = "<group>"; };
 		8C12F9978477313B39AA0DD1 /* ShortcutSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutSetupView.swift; sourceTree = "<group>"; };
 		8E04DB5EFE4532DE032B8384 /* ToneTransformerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneTransformerTests.swift; sourceTree = "<group>"; };
 		8EE95F7B9008235FDBF30003 /* AppContextDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContextDetector.swift; sourceTree = "<group>"; };
@@ -311,6 +313,7 @@
 			isa = PBXGroup;
 			children = (
 				27356BC0C8627EDF516AC463 /* APIKeySetupView.swift */,
+				A8B9C0D1E2F3A4B5C6D7E8F9 /* MicrophoneSelectionView.swift */,
 				C52684582F46D44054514F77 /* OnboardingCompleteView.swift */,
 				C65E992585E5FD5BE7B2CE10 /* OnboardingView.swift */,
 				C8568E174838B9238266C523 /* OnboardingViewModel.swift */,
@@ -457,6 +460,7 @@
 				A4CCD1E421AE3AB04AC27B10 /* Logger.swift in Sources */,
 				5F4E20469852DF486FF9C43A /* LoginItemManager.swift in Sources */,
 				98F747D52CD9CD2EA6CA9E60 /* MenuBarManager.swift in Sources */,
+				97A1B2C3D4E5F6A7B8C9D0E1 /* MicrophoneSelectionView.swift in Sources */,
 				0066FC33AE230965BF19F8F8 /* MumbleApp.swift in Sources */,
 				C3F2DB9623EA043367A56260 /* OnboardingCompleteView.swift in Sources */,
 				2F4217DBCDAAAB068B1E6A39 /* OnboardingView.swift in Sources */,

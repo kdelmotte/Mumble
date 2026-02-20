@@ -78,5 +78,8 @@ struct SettingsView: View {
                 VocabularyTabView(viewModel: viewModel)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .showVocabulary)) { _ in
+            selectedTab = .vocabulary
+        }
     }
 }

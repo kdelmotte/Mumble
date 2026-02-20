@@ -56,6 +56,9 @@ enum TranscriptionError: LocalizedError {
     /// The request did not complete within the allotted time.
     case timeout
 
+    /// The server returned HTTP 403, typically because Groq is blocking a VPN/proxy IP.
+    case accessDenied
+
     var errorDescription: String? {
         switch self {
         case .noAPIKey:
@@ -77,6 +80,8 @@ enum TranscriptionError: LocalizedError {
             return "Failed to decode transcription response: \(underlying.localizedDescription)"
         case .timeout:
             return "The transcription request timed out. Please try again."
+        case .accessDenied:
+            return "Access denied (403). Groq blocks some VPN and proxy connections — try disconnecting your VPN or switching to a different server."
         }
     }
 }

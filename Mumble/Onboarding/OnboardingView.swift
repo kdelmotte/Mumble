@@ -44,24 +44,30 @@ struct OnboardingView: View {
                     removal: .move(edge: .leading).combined(with: .opacity)
                 ))
         case 2:
-            ShortcutSetupView(viewModel: viewModel)
+            MicrophoneSelectionView(viewModel: viewModel)
                 .transition(.asymmetric(
                     insertion: .move(edge: .trailing).combined(with: .opacity),
                     removal: .move(edge: .leading).combined(with: .opacity)
                 ))
         case 3:
-            ToneSetupView(viewModel: viewModel)
+            ShortcutSetupView(viewModel: viewModel)
                 .transition(.asymmetric(
                     insertion: .move(edge: .trailing).combined(with: .opacity),
                     removal: .move(edge: .leading).combined(with: .opacity)
                 ))
         case 4:
-            StartupPreferenceView(viewModel: viewModel)
+            ToneSetupView(viewModel: viewModel)
                 .transition(.asymmetric(
                     insertion: .move(edge: .trailing).combined(with: .opacity),
                     removal: .move(edge: .leading).combined(with: .opacity)
                 ))
         case 5:
+            StartupPreferenceView(viewModel: viewModel)
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal: .move(edge: .leading).combined(with: .opacity)
+                ))
+        case 6:
             OnboardingCompleteView(viewModel: viewModel)
                 .transition(.asymmetric(
                     insertion: .move(edge: .trailing).combined(with: .opacity),

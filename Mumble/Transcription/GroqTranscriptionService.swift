@@ -84,7 +84,7 @@ final class GroqTranscriptionService {
 
                 // Do not retry on non-transient errors.
                 switch error {
-                case .noAPIKey, .invalidAPIKey, .invalidAudioData, .rateLimited, .decodingError, .timeout:
+                case .noAPIKey, .invalidAPIKey, .invalidAudioData, .rateLimited, .decodingError, .timeout, .accessDenied:
                     logger.warning("Non-retryable transcription error: \(error.localizedDescription)")
                     throw error
                 case .serverError(let statusCode, _) where statusCode < 500:
@@ -149,6 +149,9 @@ final class GroqTranscriptionService {
             throw TranscriptionError.invalidAPIKey
         case 429:
             throw TranscriptionError.rateLimited(retryAfter: nil)
+        case 403:
+            logger.warning("API key validation failed: access denied (possible VPN/proxy block)")
+            throw TranscriptionError.accessDenied
         case 500...599:
             let message = apiClient.extractErrorMessage(from: data) ?? "Internal server error"
             throw TranscriptionError.serverError(statusCode: statusCode, message: message)
@@ -182,6 +185,10 @@ final class GroqTranscriptionService {
         case 429:
             logger.warning("Transcription rate limited")
             throw TranscriptionError.rateLimited(retryAfter: nil)
+
+        case 403:
+            logger.warning("Transcription failed: access denied (possible VPN/proxy block)")
+            throw TranscriptionError.accessDenied
 
         case 500...599:
             let message = apiClient.extractErrorMessage(from: data) ?? "Internal server error"
