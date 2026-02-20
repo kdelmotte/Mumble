@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mumble — Talk to your Mac. It types back.</title>
+  <meta name="description" content="A tiny, completely free menu bar app that turns your voice into text — instantly. Hold Fn, speak, release, and text appears at your cursor.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Mumble — Talk to your Mac. It types back.">
+  <meta property="og:description" content="A tiny, completely free menu bar app that turns your voice into text — instantly.">
+  <meta property="og:image" content="https://kdelmotte.github.io/mumble/icon.png">
+  <meta property="og:url" content="https://kdelmotte.github.io/mumble/">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Mumble — Talk to your Mac. It types back.">
+  <meta name="twitter:description" content="A tiny, completely free menu bar app that turns your voice into text — instantly.">
+  <meta name="twitter:image" content="https://kdelmotte.github.io/mumble/icon.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="container">
+      <img src="icon.png" alt="Mumble app icon" class="hero-icon">
+      <h1>Mumble</h1>
+      <p class="tagline">Talk to your Mac. It types back.</p>
+      <a href="https://github.com/kdelmotte/Mumble/releases/latest" class="btn-download">
+        <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 1a1 1 0 0 1 1 1v9.586l2.293-2.293a1 1 0 1 1 1.414 1.414l-4 4a1 1 0 0 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L9 11.586V2a1 1 0 0 1 1-1ZM3 15a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1a1 1 0 0 1 1-1Z"/></svg>
+        Download for macOS
+      </a>
+      <p class="hero-meta">Requires macOS 14 Sonoma or later &middot; Free &amp; open source</p>
+    </div>
+  </header>
+
+  <!-- Features -->
+  <section>
+    <div class="container">
+      <h2 class="section-title">Everything you need, nothing you don't</h2>
+      <p class="section-subtitle">Mumble sits quietly in your menu bar and lets you dictate into any text field on macOS.</p>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🎙</div>
+          <h3>Push-to-Talk</h3>
+          <p>Hold Fn to record, release to transcribe. No clicking, no waiting.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Instant Insertion</h3>
+          <p>Transcribed text drops right into whatever app you're using.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3>Context-Aware Tone</h3>
+          <p>Detects the active app and adjusts formatting automatically — casual for chat, polished for email.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📖</div>
+          <h3>Custom Vocabulary</h3>
+          <p>Add names, jargon, and brand terms so Mumble always spells them right.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">✨</div>
+          <h3>Smart Formatting</h3>
+          <p>An LLM pass structures your dictation — greetings for email, emoji for chat, clean punctuation everywhere.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💨</div>
+          <h3>Zero Clutter</h3>
+          <p>Lives in the menu bar. No Dock icon, no windows in your way.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section>
+    <div class="container">
+      <h2 class="section-title">How it works</h2>
+      <p class="section-subtitle">Four steps. No setup after the initial onboarding.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-icon">⌨️</div>
+          <h3>Hold Fn</h3>
+          <p>Press and hold the Fn key</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-icon">🗣</div>
+          <h3>Speak</h3>
+          <p>Say whatever you want to type</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-icon">✋</div>
+          <h3>Release</h3>
+          <p>Let go of the Fn key</p>
+        </div>
+        <div class="step">
+          <div class="step-number">4</div>
+          <div class="step-icon">✅</div>
+          <h3>Text Appears</h3>
+          <p>Formatted text lands at your cursor</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Completely Free -->
+  <section class="free-section">
+    <div class="container">
+      <h2 class="section-title">Completely free</h2>
+      <p class="section-subtitle">Powered by <a href="https://groq.com">Groq</a>'s Whisper model — the most accurate open speech-to-text model, running at lightning speed. Groq's free tier requires no credit card.</p>
+
+      <div class="limits">
+        <div class="limit-item">
+          <div class="limit-value">2,000</div>
+          <div class="limit-label">requests / day</div>
+        </div>
+        <div class="limit-item">
+          <div class="limit-value">8 hrs</div>
+          <div class="limit-label">audio / day</div>
+        </div>
+        <div class="limit-item">
+          <div class="limit-value">20</div>
+          <div class="limit-label">requests / min</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- System Requirements -->
+  <section class="requirements">
+    <div class="container">
+      <h2 class="section-title">System requirements</h2>
+      <div class="req-list">
+        <div class="req-item">
+          <span class="check">&#10003;</span> macOS 14 Sonoma or later
+        </div>
+        <div class="req-item">
+          <span class="check">&#10003;</span> Free Groq API key
+        </div>
+        <div class="req-item">
+          <span class="check">&#10003;</span> Microphone access
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download CTA -->
+  <section class="download-cta">
+    <div class="container">
+      <h2>Ready to stop typing?</h2>
+      <p>Download Mumble and start dictating in seconds.</p>
+      <a href="https://github.com/kdelmotte/Mumble/releases/latest" class="btn-download">
+        <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 1a1 1 0 0 1 1 1v9.586l2.293-2.293a1 1 0 1 1 1.414 1.414l-4 4a1 1 0 0 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L9 11.586V2a1 1 0 0 1 1-1ZM3 15a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1a1 1 0 0 1 1-1Z"/></svg>
+        Download for macOS
+      </a>
+      <p class="hero-meta">Free &amp; open source &middot; MIT License</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a href="https://github.com/kdelmotte/Mumble">GitHub</a>
+        <a href="https://github.com/kdelmotte/Mumble/blob/main/LICENSE">MIT License</a>
+      </div>
+      <p>Made by Kevin Delmotte</p>
+    </div>
+  </footer>
+
+</body>
+</html>

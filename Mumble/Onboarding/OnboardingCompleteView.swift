@@ -27,6 +27,11 @@ struct OnboardingCompleteView: View {
                 accessibilityWarning
             }
 
+            Spacer().frame(height: 16)
+
+            // Vocabulary tip
+            vocabularyTip
+
         }
     }
 
@@ -134,6 +139,31 @@ struct OnboardingCompleteView: View {
             RoundedRectangle(cornerRadius: 10)
                 .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
         )
+    }
+
+    // MARK: - Vocabulary Tip
+
+    private var vocabularyTip: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "character.book.closed")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.accentColor)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Tip: Custom Vocabulary")
+                    .font(.callout.weight(.semibold))
+
+                Text("Got names that always get misspelled? Add them in Settings \u{203A} Vocabulary.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(.accentColor.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     // MARK: - Accessibility Warning
