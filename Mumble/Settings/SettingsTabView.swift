@@ -18,6 +18,7 @@ struct SettingsTabView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(height: 160)
+                    .mascotGlow(color: .blue)
 
                 Form {
                     apiKeySection
@@ -174,7 +175,7 @@ struct APIKeySheet: View {
     var body: some View {
         VStack(spacing: 16) {
             Text("Enter Groq API Key")
-                .font(.headline)
+                .font(.mumbleDisplay(size: 18))
 
             SecureField("gsk_...", text: $viewModel.pendingAPIKey)
                 .textFieldStyle(.roundedBorder)
@@ -182,6 +183,16 @@ struct APIKeySheet: View {
                 .onSubmit {
                     Task { await viewModel.testAndSaveKey() }
                 }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .strokeBorder(
+                            isFieldFocused
+                                ? MumbleTheme.brandGradient
+                                : LinearGradient(colors: [Color.clear], startPoint: .leading, endPoint: .trailing),
+                            lineWidth: isFieldFocused ? 2 : 0
+                        )
+                        .animation(.easeInOut(duration: 0.2), value: isFieldFocused)
+                )
 
             if let message = viewModel.alertMessage {
                 Label(message, systemImage: "exclamationmark.triangle")
@@ -195,6 +206,7 @@ struct APIKeySheet: View {
                     viewModel.isShowingKeySheet = false
                 }
                 .keyboardShortcut(.cancelAction)
+                .buttonStyle(MumbleButtonStyle(isProminent: false))
 
                 Spacer()
 
@@ -202,12 +214,15 @@ struct APIKeySheet: View {
                     Task { await viewModel.testAndSaveKey() }
                 }
                 .keyboardShortcut(.defaultAction)
+                .buttonStyle(MumbleButtonStyle(isProminent: true))
                 .disabled(viewModel.pendingAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || viewModel.isTesting)
+                .opacity((viewModel.pendingAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || viewModel.isTesting) ? 0.5 : 1.0)
             }
 
             if viewModel.isTesting {
                 ProgressView()
                     .controlSize(.small)
+                    .tint(Color(red: 0.91, green: 0.45, blue: 0.36))
             }
         }
         .padding(24)

@@ -15,6 +15,7 @@ struct MicrophoneSelectionView: View {
 
             // Microphone picker card
             microphoneCard
+                .staggeredEntrance(index: 0)
 
             Spacer()
         }
@@ -31,9 +32,10 @@ struct MicrophoneSelectionView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(height: 160)
+                .mascotGlow(color: .blue)
 
             Text("Choose Your Microphone")
-                .font(.title.bold())
+                .font(.mumbleDisplay(size: 28))
 
             Text("System Default works for most setups. Pick a specific mic if you use an external one.")
                 .font(.body)
@@ -84,13 +86,7 @@ struct MicrophoneSelectionView: View {
                     .foregroundStyle(.tertiary)
             }
         }
-        .padding(20)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
-        )
+        .themedCard(accent: .blue, elevated: true)
     }
 }
 

@@ -18,10 +18,11 @@ struct ToneTabView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(height: 160)
+                    .mascotGlow(color: .teal)
 
                 VStack(spacing: 6) {
                     Text("Tone Behavior")
-                        .font(.title2.weight(.semibold))
+                        .font(.mumbleDisplay(size: 22))
 
                     Text("Choose how Mumble formats your speech for different types of apps.")
                         .font(.callout)
@@ -33,12 +34,25 @@ struct ToneTabView: View {
                 Form {
                     Section {
                         ForEach(AppGroup.allCases) { group in
-                            Picker(group.displayName, selection: viewModel.toneBinding(for: group)) {
-                                ForEach(ToneProfile.allCases, id: \.self) { tone in
-                                    Text(tone.displayName).tag(tone)
+                            VStack(alignment: .leading, spacing: 6) {
+                                Picker(group.displayName, selection: viewModel.toneBinding(for: group)) {
+                                    ForEach(ToneProfile.allCases, id: \.self) { tone in
+                                        Text(tone.displayName).tag(tone)
+                                    }
                                 }
+                                .help(group.appDescription)
+
+                                // Tone preview
+                                Text(tonePreviewText(for: viewModel.toneMappingConfig.tone(for: group)))
+                                    .font(.caption)
+                                    .foregroundStyle(.tertiary)
+                                    .italic()
+                                    .padding(.horizontal, 4)
+                                    .padding(.vertical, 4)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Color.teal.opacity(0.04))
+                                    .clipShape(RoundedRectangle(cornerRadius: 4))
                             }
-                            .help(group.appDescription)
                         }
                     } header: {
                         Text("Tone Per App Group")
@@ -76,6 +90,21 @@ struct ToneTabView: View {
                 .scrollDisabled(true)
             }
             .padding(.top, 20)
+        }
+
+
+    }
+
+    // MARK: - Tone Preview Text
+
+    private func tonePreviewText(for tone: ToneProfile) -> String {
+        switch tone {
+        case .professional:
+            return "\"I would like to schedule a meeting for tomorrow afternoon.\""
+        case .casual:
+            return "\"I'd like to schedule a meeting for tomorrow afternoon.\""
+        case .veryCasual:
+            return "\"wanna schedule a meeting for tomorrow afternoon\""
         }
     }
 }

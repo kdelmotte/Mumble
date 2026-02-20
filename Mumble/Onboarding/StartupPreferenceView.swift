@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - StartupPreferenceView (Step 4)
+// MARK: - StartupPreferenceView (Step 5)
 
 struct StartupPreferenceView: View {
 
@@ -15,6 +15,7 @@ struct StartupPreferenceView: View {
 
             // Launch at login toggle card
             launchAtLoginCard
+                .staggeredEntrance(index: 0)
 
             Spacer()
         }
@@ -28,9 +29,10 @@ struct StartupPreferenceView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(height: 160)
+                .mascotGlow(color: .purple)
 
             Text("Startup Preferences")
-                .font(.title.bold())
+                .font(.mumbleDisplay(size: 28))
 
             Text("Configure how Mumble behaves when your Mac starts up.")
                 .font(.body)
@@ -47,7 +49,7 @@ struct StartupPreferenceView: View {
             Toggle(isOn: $viewModel.launchAtLogin) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Launch Mumble at login")
-                        .font(.headline)
+                        .font(.mumbleHeadline())
 
                     Text("Mumble will start automatically when you log in so dictation is always ready.")
                         .font(.callout)
@@ -69,13 +71,7 @@ struct StartupPreferenceView: View {
                     .foregroundStyle(.tertiary)
             }
         }
-        .padding(20)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
-        )
+        .themedCard(accent: .purple, elevated: true)
     }
 }
 

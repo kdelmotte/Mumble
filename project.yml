@@ -26,6 +26,8 @@ targets:
       - path: Mumble
     info:
       path: Mumble/Info.plist
+      properties:
+        NSMicrophoneUsageDescription: "Mumble needs microphone access to capture audio for speech-to-text dictation."
     entitlements:
       path: Mumble/Mumble.entitlements
     dependencies:

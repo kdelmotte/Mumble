@@ -22,11 +22,13 @@ struct ShortcutSetupView: View {
 
             // Shortcut recorder card
             shortcutCard
+                .staggeredEntrance(index: 0)
 
             Spacer().frame(height: 16)
 
             // Try it here card
             tryItHereCard
+                .staggeredEntrance(index: 1)
 
             Spacer().frame(height: 16)
 
@@ -49,9 +51,10 @@ struct ShortcutSetupView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(height: 100)
+                .mascotGlow(color: .indigo)
 
             Text("Dictation Shortcut")
-                .font(.title.bold())
+                .font(.mumbleDisplay(size: 28))
 
             Text("Hold down the shortcut to start dictating. Release to stop and insert text.")
                 .font(.body)
@@ -67,7 +70,7 @@ struct ShortcutSetupView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Current Shortcut")
-                    .font(.headline)
+                    .font(.mumbleHeadline())
 
                 Spacer()
 
@@ -76,18 +79,11 @@ struct ShortcutSetupView: View {
 
             Button("Reset to Default (Fn)") {
                 viewModel.resetShortcutToDefault()
-                // Update demo monitor with new shortcut
                 viewModel.resumeDemoAfterRecording()
             }
             .disabled(viewModel.currentShortcut == .defaultFnKey)
         }
-        .padding(20)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
-        )
+        .themedCard(accent: .indigo)
     }
 
     // MARK: - Try It Here Card
@@ -95,7 +91,7 @@ struct ShortcutSetupView: View {
     private var tryItHereCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Try It Here")
-                .font(.headline)
+                .font(.mumbleHeadline())
 
             Text("Hold **\(viewModel.currentShortcut.displayString)** and speak…")
                 .font(.callout)
@@ -121,7 +117,13 @@ struct ShortcutSetupView: View {
                 }
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+                        .strokeBorder(
+                            viewModel.isDemoRecording
+                                ? AnyShapeStyle(MumbleTheme.brandGradient)
+                                : AnyShapeStyle(Color.primary.opacity(0.1)),
+                            lineWidth: viewModel.isDemoRecording ? 2 : 1
+                        )
+                        .animation(.easeInOut(duration: 0.3), value: viewModel.isDemoRecording)
                 )
                 .onChange(of: viewModel.demoText) { _, newValue in
                     if newValue.count > 280 {
@@ -153,13 +155,7 @@ struct ShortcutSetupView: View {
             }
             .frame(height: 16)
         }
-        .padding(20)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
-        )
+        .themedCard(accent: .indigo, elevated: true)
     }
 
     // MARK: - Audio Level Indicator
@@ -168,7 +164,7 @@ struct ShortcutSetupView: View {
         HStack(spacing: 2) {
             ForEach(0..<5, id: \.self) { index in
                 RoundedRectangle(cornerRadius: 1)
-                    .fill(Color.red)
+                    .fill(MumbleTheme.brandGradient)
                     .frame(width: 3, height: barHeight(for: index))
             }
         }
@@ -219,12 +215,14 @@ struct OnboardingShortcutRecorderView: View {
                 .padding(.vertical, 6)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(isRecording ? Color.accentColor.opacity(0.15) : Color.secondary.opacity(0.1))
+                        .fill(isRecording ? AnyShapeStyle(MumbleTheme.brandGradient.opacity(0.15)) : AnyShapeStyle(Color.secondary.opacity(0.1)))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(isRecording ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: 1)
+                        .stroke(isRecording ? AnyShapeStyle(MumbleTheme.brandGradient) : AnyShapeStyle(Color.secondary.opacity(0.3)), lineWidth: isRecording ? 2 : 1)
                 )
+                .scaleEffect(isRecording ? 1.03 : 1.0)
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isRecording)
         }
         .buttonStyle(.plain)
         .onExitCommand {

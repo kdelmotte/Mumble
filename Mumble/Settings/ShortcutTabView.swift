@@ -19,10 +19,11 @@ struct ShortcutTabView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(height: 160)
+                    .mascotGlow(color: .indigo)
 
                 VStack(spacing: 6) {
                     Text("Dictation Shortcut")
-                        .font(.title2.weight(.semibold))
+                        .font(.mumbleDisplay(size: 22))
 
                     Text("Hold down the shortcut to start dictating. Release to stop and insert text.")
                         .font(.callout)
@@ -52,6 +53,8 @@ struct ShortcutTabView: View {
             }
             .padding(.top, 20)
         }
+
+
     }
 }
 
@@ -78,12 +81,14 @@ struct ShortcutRecorderView: View {
                 .padding(.vertical, 6)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(isRecording ? Color.accentColor.opacity(0.15) : Color.secondary.opacity(0.1))
+                        .fill(isRecording ? AnyShapeStyle(MumbleTheme.brandGradient.opacity(0.15)) : AnyShapeStyle(Color.secondary.opacity(0.1)))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(isRecording ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: 1)
+                        .stroke(isRecording ? AnyShapeStyle(MumbleTheme.brandGradient) : AnyShapeStyle(Color.secondary.opacity(0.3)), lineWidth: isRecording ? 2 : 1)
                 )
+                .scaleEffect(isRecording ? 1.03 : 1.0)
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isRecording)
         }
         .buttonStyle(.plain)
         .onExitCommand {

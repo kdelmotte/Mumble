@@ -22,6 +22,11 @@ struct APIKeySetupView: View {
             // Test result
             if let result = viewModel.keyTestResult {
                 testResultView(result)
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.95).combined(with: .opacity),
+                        removal: .opacity
+                    ))
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.keyTestResult)
             }
 
             Spacer()
@@ -36,9 +41,10 @@ struct APIKeySetupView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(height: 160)
+                .mascotGlow(color: .orange)
 
             Text("Connect to Groq")
-                .font(.title.bold())
+                .font(.mumbleDisplay(size: 28))
 
             Text("Mumble uses Groq's Whisper model for fast, accurate transcription.")
                 .font(.body)
@@ -72,12 +78,16 @@ struct APIKeySetupView: View {
                 validationIndicator
             }
         }
-        .padding(20)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .themedCard(accent: .orange, elevated: true)
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(
+                    isKeyFieldFocused
+                        ? MumbleTheme.brandGradient
+                        : LinearGradient(colors: [Color.clear], startPoint: .leading, endPoint: .trailing),
+                    lineWidth: isKeyFieldFocused ? 2 : 0
+                )
+                .animation(.easeInOut(duration: 0.2), value: isKeyFieldFocused)
         )
     }
 
@@ -89,9 +99,7 @@ struct APIKeySetupView: View {
             ProgressView()
                 .controlSize(.small)
         } else if viewModel.keyTestResult == .success {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-                .font(.system(size: 16))
+            GradientCheckmark()
         } else if case .failure = viewModel.keyTestResult {
             Image(systemName: "xmark.circle.fill")
                 .foregroundStyle(.red)
@@ -123,17 +131,8 @@ struct APIKeySetupView: View {
                     .foregroundStyle(.red)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            result == .success
-                ? Color.green.opacity(0.06)
-                : Color.red.opacity(0.06)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .transition(.opacity.combined(with: .move(edge: .top)))
-        .animation(.easeInOut(duration: 0.2), value: viewModel.keyTestResult)
+        .themedCard(accent: result == .success ? .green : .red)
     }
 }
 

@@ -18,18 +18,19 @@ struct HomeTabView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(height: 160)
+                    .mascotGlow(color: .blue)
 
                 // Title + tagline
                 VStack(spacing: 6) {
                     Text("Mumble")
-                        .font(.largeTitle.weight(.bold))
+                        .font(.mumbleDisplay(size: 32))
 
                     Text("Voice-to-text, your way.")
-                        .font(.title3)
+                        .font(.mumbleHeadline(size: 16, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
 
-                Divider()
+                GradientDivider()
                     .padding(.horizontal, 40)
 
                 // Info section
@@ -67,6 +68,8 @@ struct HomeTabView: View {
             }
             .padding(.top, 20)
         }
+
+
     }
 
     // MARK: - Analytics Opt-Out Binding

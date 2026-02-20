@@ -11,42 +11,52 @@ struct OnboardingCompleteView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            headerSection
+        ZStack {
+            VStack(spacing: 0) {
+                // Header
+                headerSection
 
-            Spacer().frame(height: 20)
+                Spacer().frame(height: 10)
 
-            // Summary card
-            summaryCard
+                // Summary card (two-column)
+                summaryCard
 
-            Spacer().frame(height: 16)
+                Spacer().frame(height: 10)
 
-            // Warning + action if accessibility is missing
-            if !viewModel.permissionManager.accessibilityGranted {
-                accessibilityWarning
+                // Warning + action if accessibility is missing
+                if !viewModel.permissionManager.accessibilityGranted {
+                    accessibilityWarning
+                }
+
+                Spacer().frame(height: 10)
+
+                // Vocabulary tip
+                vocabularyTip
+
+                Spacer()
             }
 
-            Spacer().frame(height: 16)
-
-            // Vocabulary tip
-            vocabularyTip
-
+            // Confetti overlay
+            if allPermissionsGranted {
+                ConfettiView()
+                    .ignoresSafeArea()
+            }
         }
     }
 
     // MARK: - Header
 
     private var headerSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             Image("MumbleIconSettings")
                 .resizable()
                 .scaledToFit()
                 .frame(height: 80)
+                .mascotGlow(color: .green, intensity: 1.5)
 
             if allPermissionsGranted {
                 Text("You're all set!")
-                    .font(.title.bold())
+                    .font(.mumbleDisplay(size: 28))
 
                 Text("Mumble is ready to go. Here's a summary of your setup.")
                     .font(.body)
@@ -55,7 +65,7 @@ struct OnboardingCompleteView: View {
                     .fixedSize(horizontal: false, vertical: true)
             } else {
                 Text("Almost there!")
-                    .font(.title.bold())
+                    .font(.mumbleDisplay(size: 28))
 
                 Text("Accessibility permission is required for Mumble to insert text. If you already granted it, try restarting the app.")
                     .font(.body)
@@ -66,79 +76,141 @@ struct OnboardingCompleteView: View {
         }
     }
 
-    // MARK: - Summary Card
+    // MARK: - Summary Card (Two-Column)
 
     private var toneSummaryValue: String {
         let personal = viewModel.toneMappingConfig.tone(for: .personal).displayName
         let work = viewModel.toneMappingConfig.tone(for: .work).displayName
-        return "Personal: \(personal), Work: \(work)"
+        return "\(personal) / \(work)"
     }
 
     private var summaryCard: some View {
-        VStack(spacing: 0) {
-            summaryRow(
-                icon: "fn",
-                iconColor: .accentColor,
-                title: "Trigger",
-                value: "Hold \(viewModel.currentShortcut.displayString) to dictate",
-                isSystemIcon: false
-            )
+        HStack(alignment: .top, spacing: 0) {
+            // Left column
+            VStack(spacing: 0) {
+                compactCell(
+                    icon: "fn",
+                    iconColor: .accentColor,
+                    title: "Trigger",
+                    value: "Hold \(viewModel.currentShortcut.displayString)",
+                    isSystemIcon: false
+                )
 
-            Divider().padding(.leading, 54)
+                Divider().padding(.horizontal, 10)
 
-            summaryRow(
-                icon: "mic.fill",
-                iconColor: .red,
-                title: "Microphone",
-                value: viewModel.microphoneSummaryValue,
-                statusColor: viewModel.permissionManager.microphoneGranted ? .green : .yellow
-            )
+                compactCell(
+                    icon: "mic.fill",
+                    iconColor: .red,
+                    title: "Microphone",
+                    value: viewModel.microphoneSummaryValue,
+                    statusColor: viewModel.permissionManager.microphoneGranted ? .green : .yellow
+                )
 
-            Divider().padding(.leading, 54)
+                Divider().padding(.horizontal, 10)
 
-            summaryRow(
-                icon: "accessibility",
-                iconColor: .blue,
-                title: "Accessibility",
-                value: viewModel.permissionManager.accessibilityGranted ? "Granted" : "Not granted",
-                statusColor: viewModel.permissionManager.accessibilityGranted ? .green : .yellow
-            )
+                compactCell(
+                    icon: "accessibility",
+                    iconColor: .blue,
+                    title: "Accessibility",
+                    value: viewModel.permissionManager.accessibilityGranted ? "Granted" : "Not granted",
+                    statusColor: viewModel.permissionManager.accessibilityGranted ? .green : .yellow
+                )
+            }
 
-            Divider().padding(.leading, 54)
+            // Column divider
+            Divider()
 
-            summaryRow(
-                icon: "key.fill",
-                iconColor: .orange,
-                title: "API Key",
-                value: "Configured",
-                statusColor: .green
-            )
+            // Right column
+            VStack(spacing: 0) {
+                compactCell(
+                    icon: "key.fill",
+                    iconColor: .orange,
+                    title: "API Key",
+                    value: "Configured",
+                    statusColor: .green
+                )
 
-            Divider().padding(.leading, 54)
+                Divider().padding(.horizontal, 10)
 
-            summaryRow(
-                icon: "textformat",
-                iconColor: .teal,
-                title: "Tone",
-                value: toneSummaryValue
-            )
+                compactCell(
+                    icon: "textformat",
+                    iconColor: .teal,
+                    title: "Tone",
+                    value: toneSummaryValue
+                )
 
-            Divider().padding(.leading, 54)
+                Divider().padding(.horizontal, 10)
 
-            summaryRow(
-                icon: "power",
-                iconColor: .purple,
-                title: "Launch at Login",
-                value: viewModel.launchAtLogin ? "On" : "Off",
-                statusColor: viewModel.launchAtLogin ? .green : .secondary
-            )
+                compactCell(
+                    icon: "power",
+                    iconColor: .purple,
+                    title: "Launch at Login",
+                    value: viewModel.launchAtLogin ? "On" : "Off",
+                    statusColor: viewModel.launchAtLogin ? .green : .secondary
+                )
+            }
         }
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
-        )
+        .fixedSize(horizontal: false, vertical: true)
+        .themedCard(accent: .green, elevated: true)
+    }
+
+    // MARK: - Compact Cell
+
+    private func compactCell(
+        icon: String,
+        iconColor: Color,
+        title: String,
+        value: String,
+        isSystemIcon: Bool = true,
+        statusColor: Color? = nil
+    ) -> some View {
+        HStack(spacing: 8) {
+            // Icon
+            ZStack {
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(
+                        LinearGradient(
+                            colors: [iconColor.opacity(0.15), iconColor.opacity(0.08)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 26, height: 26)
+
+                if isSystemIcon {
+                    Image(systemName: icon)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(iconColor)
+                } else {
+                    Text(icon)
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundStyle(iconColor)
+                }
+            }
+
+            // Title + Value
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                HStack(spacing: 4) {
+                    if let statusColor {
+                        Circle()
+                            .fill(statusColor)
+                            .frame(width: 6, height: 6)
+                    }
+
+                    Text(value)
+                        .font(.caption.weight(.medium))
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
     }
 
     // MARK: - Vocabulary Tip
@@ -147,7 +219,7 @@ struct OnboardingCompleteView: View {
         HStack(spacing: 10) {
             Image(systemName: "character.book.closed")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(MumbleTheme.brandGradient)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Tip: Custom Vocabulary")
@@ -162,7 +234,7 @@ struct OnboardingCompleteView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(Color.accentColor.opacity(0.08))
+        .background(MumbleTheme.brandGradient.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
@@ -179,11 +251,8 @@ struct OnboardingCompleteView: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.yellow.opacity(0.06))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .themedCard(accent: .yellow)
 
             Button("Open Accessibility Settings") {
                 viewModel.permissionManager.openAccessibilitySettings()
@@ -192,59 +261,6 @@ struct OnboardingCompleteView: View {
             .controlSize(.small)
         }
     }
-
-    // MARK: - Summary Row
-
-    private func summaryRow(
-        icon: String,
-        iconColor: Color,
-        title: String,
-        value: String,
-        isSystemIcon: Bool = true,
-        statusColor: Color? = nil
-    ) -> some View {
-        HStack(spacing: 14) {
-            // Icon
-            ZStack {
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(iconColor.opacity(0.12))
-                    .frame(width: 32, height: 32)
-
-                if isSystemIcon {
-                    Image(systemName: icon)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(iconColor)
-                } else {
-                    Text(icon)
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundStyle(iconColor)
-                }
-            }
-
-            Text(title)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-
-            Spacer()
-
-            HStack(spacing: 6) {
-                if let statusColor {
-                    Circle()
-                        .fill(statusColor)
-                        .frame(width: 7, height: 7)
-                }
-
-                Text(value)
-                    .font(.callout.weight(.medium))
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-    }
-
-    // MARK: - Accent Color Extension
-
-    private var accentColor: Color { .accentColor }
 }
 
 // MARK: - Preview

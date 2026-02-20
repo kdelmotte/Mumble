@@ -1,7 +1,7 @@
 // VocabularyTabView.swift
 // Mumble
 //
-// The "Vocabulary" tab in the Settings sidebar. Lets the user add spoken→corrected
+// The "Vocabulary" tab in the Settings sidebar. Lets the user add spoken->corrected
 // word pairs to fix recurring Whisper misspellings of proper nouns and brand names.
 
 import SwiftUI
@@ -18,10 +18,11 @@ struct VocabularyTabView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(height: 160)
+                    .mascotGlow(color: .purple)
 
                 VStack(spacing: 6) {
                     Text("Vocabulary")
-                        .font(.title2.weight(.semibold))
+                        .font(.mumbleDisplay(size: 22))
 
                     Text("Add words that are frequently misspelled by speech-to-text, like proper nouns and brand names.")
                         .font(.callout)
@@ -35,11 +36,11 @@ struct VocabularyTabView: View {
                         // Column headers.
                         HStack {
                             Text("Spoken")
-                                .font(.caption.weight(.medium))
+                                .font(.mumbleHeadline(size: 12, weight: .semibold))
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             Text("Corrected")
-                                .font(.caption.weight(.medium))
+                                .font(.mumbleHeadline(size: 12, weight: .semibold))
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             // Spacer for the delete button column.
@@ -57,7 +58,7 @@ struct VocabularyTabView: View {
                                     viewModel.removeVocabularyEntry(id: entry.id)
                                 } label: {
                                     Image(systemName: "minus.circle.fill")
-                                        .foregroundStyle(.red)
+                                        .foregroundStyle(.red.opacity(0.8))
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -68,6 +69,7 @@ struct VocabularyTabView: View {
                             viewModel.addVocabularyEntry()
                         } label: {
                             Label("Add Word Pair", systemImage: "plus.circle")
+                                .foregroundStyle(Color(red: 0.91, green: 0.45, blue: 0.36))
                         }
                     } header: {
                         Text("Word Pairs")

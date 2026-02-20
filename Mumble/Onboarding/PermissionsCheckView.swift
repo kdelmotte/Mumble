@@ -11,22 +11,23 @@ struct PermissionsCheckView: View {
             // Header
             headerSection
 
-            Spacer().frame(height: 20)
+            Spacer().frame(height: 12)
 
             // Privacy note
             privacyNote
 
-            Spacer().frame(height: 20)
+            Spacer().frame(height: 12)
 
             // Permission rows
-            VStack(spacing: 16) {
+            VStack(spacing: 12) {
                 permissionRow(
                     icon: "mic.fill",
                     iconColor: .red,
                     title: "Microphone",
                     description: "Required to capture audio for speech-to-text",
                     isGranted: viewModel.permissionManager.microphoneGranted,
-                    action: viewModel.requestMicPermission
+                    action: viewModel.requestMicPermission,
+                    index: 0
                 )
 
                 permissionRow(
@@ -35,13 +36,14 @@ struct PermissionsCheckView: View {
                     title: "Accessibility",
                     description: "Required to type transcribed text into the active app",
                     isGranted: viewModel.permissionManager.accessibilityGranted,
-                    action: viewModel.requestAccessibilityPermission
+                    action: viewModel.requestAccessibilityPermission,
+                    index: 1
                 )
             }
 
             // Warning if permissions are missing
             if viewModel.hasPermissionWarning {
-                Spacer().frame(height: 16)
+                Spacer().frame(height: 10)
                 permissionWarning
             }
 
@@ -56,10 +58,11 @@ struct PermissionsCheckView: View {
             Image("MumbleIconPermissions")
                 .resizable()
                 .scaledToFit()
-                .frame(height: 120)
+                .frame(height: 90)
+                .mascotGlow(color: .red)
 
             Text("Welcome to Mumble")
-                .font(.title.bold())
+                .font(.mumbleDisplay(size: 28))
 
             Text("Fast speech-to-text dictation, right from your Mac.")
                 .font(.body)
@@ -79,12 +82,10 @@ struct PermissionsCheckView: View {
             Text("Audio is sent to your own Groq instance for transcription. No data is stored.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.green.opacity(0.06))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedCard(accent: .green)
     }
 
     // MARK: - Permission Row
@@ -95,13 +96,20 @@ struct PermissionsCheckView: View {
         title: String,
         description: String,
         isGranted: Bool,
-        action: @escaping () -> Void
+        action: @escaping () -> Void,
+        index: Int
     ) -> some View {
         HStack(spacing: 14) {
             // Icon
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(iconColor.opacity(0.12))
+                    .fill(
+                        LinearGradient(
+                            colors: [iconColor.opacity(0.15), iconColor.opacity(0.08)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
                     .frame(width: 40, height: 40)
 
                 Image(systemName: icon)
@@ -112,7 +120,7 @@ struct PermissionsCheckView: View {
             // Text
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.headline)
+                    .font(.mumbleHeadline())
 
                 Text(description)
                     .font(.caption)
@@ -123,10 +131,7 @@ struct PermissionsCheckView: View {
 
             // Status + Action
             if isGranted {
-                Label("Granted", systemImage: "checkmark.circle.fill")
-                    .font(.callout.weight(.medium))
-                    .foregroundStyle(.green)
-                    .labelStyle(.titleAndIcon)
+                GradientCheckmark()
             } else {
                 Button("Grant") {
                     action()
@@ -135,14 +140,8 @@ struct PermissionsCheckView: View {
                 .controlSize(.small)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 1)
-        )
+        .themedCard(accent: iconColor, elevated: isGranted)
+        .staggeredEntrance(index: index)
     }
 
     // MARK: - Permission Warning
@@ -156,12 +155,10 @@ struct PermissionsCheckView: View {
             Text("Both permissions are required to continue. Mumble needs microphone access to hear you and accessibility access to type for you.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.yellow.opacity(0.06))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedCard(accent: .yellow)
     }
 }
 

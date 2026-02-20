@@ -5,6 +5,7 @@ import SwiftUI
 struct OnboardingView: View {
 
     @ObservedObject var viewModel: OnboardingViewModel
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: 0) {
@@ -15,15 +16,16 @@ struct OnboardingView: View {
                 .padding(.top, 32)
                 .padding(.bottom, 16)
 
-            Divider()
-
-            // Bottom bar: step dots + navigation
+            // Bottom bar: progress + navigation
             bottomBar
-                .padding(.horizontal, 32)
-                .padding(.vertical, 20)
         }
         .frame(width: 520, height: 700)
-        .background(.background)
+        .background {
+            ZStack {
+                Color(nsColor: .windowBackgroundColor)
+                MumbleTheme.subtleBackground(for: colorScheme)
+            }
+        }
     }
 
     // MARK: - Step Content
@@ -81,76 +83,71 @@ struct OnboardingView: View {
     // MARK: - Bottom Bar
 
     private var bottomBar: some View {
-        HStack {
-            // Back button
-            if viewModel.canGoBack {
-                Button(action: {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        viewModel.goToPreviousStep()
+        VStack(spacing: 0) {
+            GradientDivider()
+
+            VStack(spacing: 12) {
+                // Progress bar
+                StepProgressBar(
+                    currentStep: viewModel.currentStep,
+                    totalSteps: OnboardingViewModel.totalSteps
+                )
+                .padding(.horizontal, 20)
+
+                // Navigation buttons
+                HStack {
+                    // Back button
+                    if viewModel.canGoBack {
+                        Button(action: {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                                viewModel.goToPreviousStep()
+                            }
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 12, weight: .semibold))
+                                Text("Back")
+                            }
+                        }
+                        .buttonStyle(MumbleButtonStyle(isProminent: false))
+                    } else {
+                        Spacer()
+                            .frame(width: 60)
                     }
-                }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text("Back")
+
+                    Spacer()
+
+                    if viewModel.isLastStep {
+                        Button(action: {
+                            viewModel.completeOnboarding()
+                        }) {
+                            HStack(spacing: 4) {
+                                Text("Start Mumbling")
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12, weight: .semibold))
+                            }
+                        }
+                        .buttonStyle(MumbleButtonStyle(isProminent: true))
+                    } else {
+                        Button(action: {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                                viewModel.goToNextStep()
+                            }
+                        }) {
+                            HStack(spacing: 4) {
+                                Text("Continue")
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12, weight: .semibold))
+                            }
+                        }
+                        .buttonStyle(MumbleButtonStyle(isProminent: true))
+                        .opacity(viewModel.canProceedFromStep(viewModel.currentStep) ? 1.0 : 0.5)
+                        .disabled(!viewModel.canProceedFromStep(viewModel.currentStep))
                     }
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-            } else {
-                Spacer()
-                    .frame(width: 60)
             }
-
-            Spacer()
-
-            // Step indicator dots
-            stepIndicator
-
-            Spacer()
-
-            if viewModel.isLastStep {
-                Button(action: {
-                    viewModel.completeOnboarding()
-                }) {
-                    HStack(spacing: 4) {
-                        Text("Start Mumbling")
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12, weight: .semibold))
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.regular)
-            } else {
-                Button(action: {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        viewModel.goToNextStep()
-                    }
-                }) {
-                    HStack(spacing: 4) {
-                        Text("Continue")
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12, weight: .semibold))
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.regular)
-                .disabled(!viewModel.canProceedFromStep(viewModel.currentStep))
-            }
-        }
-    }
-
-    // MARK: - Step Indicator
-
-    private var stepIndicator: some View {
-        HStack(spacing: 8) {
-            ForEach(0..<OnboardingViewModel.totalSteps, id: \.self) { index in
-                Circle()
-                    .fill(index == viewModel.currentStep ? Color.accentColor : Color.secondary.opacity(0.3))
-                    .frame(width: 8, height: 8)
-                    .scaleEffect(index == viewModel.currentStep ? 1.2 : 1.0)
-                    .animation(.easeInOut(duration: 0.2), value: viewModel.currentStep)
-            }
+            .padding(.horizontal, 32)
+            .padding(.vertical, 16)
         }
     }
 }
