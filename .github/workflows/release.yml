@@ -102,7 +102,7 @@ jobs:
         run: |
           APP_PATH="$RUNNER_TEMP/build/Release/Mumble.app"
           TAG="${GITHUB_REF_NAME}"
-          RELEASE_ZIP="$RUNNER_TEMP/Mumble-${TAG}.zip"
+          RELEASE_ZIP="$RUNNER_TEMP/Mumble.zip"
           ditto -c -k --keepParent "$APP_PATH" "$RELEASE_ZIP"
           echo "RELEASE_ZIP=$RELEASE_ZIP" >> "$GITHUB_ENV"
           echo "TAG=$TAG" >> "$GITHUB_ENV"
