@@ -113,10 +113,16 @@ jobs:
         run: |
           APP_PATH="$RUNNER_TEMP/build/Release/Mumble.app"
           RELEASE_DMG="$RUNNER_TEMP/Mumble.dmg"
+          STAGE_DIR="$RUNNER_TEMP/dmg-staging"
+
+          rm -rf "$STAGE_DIR"
+          mkdir -p "$STAGE_DIR"
+          cp -R "$APP_PATH" "$STAGE_DIR/Mumble.app"
+          ln -s /Applications "$STAGE_DIR/Applications"
 
           hdiutil create \
             -volname "Mumble" \
-            -srcfolder "$APP_PATH" \
+            -srcfolder "$STAGE_DIR" \
             -ov \
             -format UDZO \
             "$RELEASE_DMG"
@@ -125,6 +131,51 @@ jobs:
           codesign --verify --verbose "$RELEASE_DMG"
 
           echo "RELEASE_DMG=$RELEASE_DMG" >> "$GITHUB_ENV"
+
+      - name: Notarize DMG
+        timeout-minutes: 50
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          RELEASE_DMG="$RUNNER_TEMP/Mumble.dmg"
+
+          SUBMIT_OUT=$(xcrun notarytool submit "$RELEASE_DMG" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait --timeout 45m 2>&1) || true
+          echo "$SUBMIT_OUT"
+
+          SUBMISSION_ID=$(echo "$SUBMIT_OUT" | grep '  id:' | head -1 | awk '{print $2}')
+
+          if echo "$SUBMIT_OUT" | grep -q "status: Accepted"; then
+            echo "DMG notarization accepted!"
+          else
+            echo "DMG notarization failed. Fetching log…"
+            if [ -n "$SUBMISSION_ID" ]; then
+              xcrun notarytool log "$SUBMISSION_ID" \
+                --apple-id "$APPLE_ID" \
+                --password "$APPLE_ID_PASSWORD" \
+                --team-id "$APPLE_TEAM_ID" \
+                /dev/stdout || true
+            fi
+            exit 1
+          fi
+
+      - name: Staple DMG notarization ticket
+        run: |
+          RELEASE_DMG="$RUNNER_TEMP/Mumble.dmg"
+          for i in 1 2 3; do
+            if xcrun stapler staple "$RELEASE_DMG"; then
+              exit 0
+            fi
+            echo "DMG staple attempt $i failed, waiting 15s for ticket propagation…"
+            sleep 15
+          done
+          echo "DMG stapling failed after 3 attempts"
+          exit 1
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

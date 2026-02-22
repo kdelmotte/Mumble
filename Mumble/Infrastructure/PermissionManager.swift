@@ -11,6 +11,8 @@ final class PermissionManager: ObservableObject {
     @Published private(set) var microphoneGranted: Bool = false
     @Published private(set) var accessibilityGranted: Bool = false
 
+    private let logger = STTLogger.shared
+
     private var accessibilityTimer: Timer?
     private let accessibilityCheckInterval: TimeInterval = 2.0
 
@@ -36,10 +38,14 @@ final class PermissionManager: ObservableObject {
     /// Requests microphone access. The published property updates once the
     /// user responds to the system prompt (or immediately if access was previously determined).
     func requestMicrophonePermission() {
-        switch AVCaptureDevice.authorizationStatus(for: .audio) {
+        let status = AVCaptureDevice.authorizationStatus(for: .audio)
+        logger.info("PermissionManager: request microphone permission (status: \(String(describing: status)))")
+
+        switch status {
         case .authorized:
             microphoneGranted = true
         case .notDetermined:
+            bringAppWindowsToFront()
             AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
                 Task { @MainActor [weak self] in
                     self?.microphoneGranted = granted
@@ -47,15 +53,13 @@ final class PermissionManager: ObservableObject {
                     // try to re-activate. Without this, the accessory app's
                     // windows may not come back to the foreground.
                     try? await Task.sleep(for: .milliseconds(300))
-                    NSApp.activate(ignoringOtherApps: true)
-                    // Bring the onboarding window to front specifically.
-                    for window in NSApp.windows where window.isVisible && window.canBecomeKey {
-                        window.makeKeyAndOrderFront(nil)
-                    }
+                    self?.bringAppWindowsToFront()
                 }
             }
         case .denied, .restricted:
             microphoneGranted = false
+            // If user previously denied, "Grant" should take them somewhere useful.
+            openMicrophoneSettings()
         @unknown default:
             microphoneGranted = false
         }
@@ -104,6 +108,13 @@ final class PermissionManager: ObservableObject {
             Task { @MainActor [weak self] in
                 self?.checkAccessibilityPermission()
             }
+        }
+    }
+
+    private func bringAppWindowsToFront() {
+        NSApp.activate(ignoringOtherApps: true)
+        for window in NSApp.windows where window.isVisible && window.canBecomeKey {
+            window.makeKeyAndOrderFront(nil)
         }
     }
 }
