@@ -109,23 +109,66 @@ jobs:
           echo "Stapling failed after 3 attempts"
           exit 1
 
+      - name: Install DMG packaging dependencies
+        run: |
+          python3 -m pip install --quiet dmgbuild pillow
+
       - name: Package DMG for release
         run: |
           APP_PATH="$RUNNER_TEMP/build/Release/Mumble.app"
           RELEASE_DMG="$RUNNER_TEMP/Mumble.dmg"
-          STAGE_DIR="$RUNNER_TEMP/dmg-staging"
+          DMG_BACKGROUND_PATH="$RUNNER_TEMP/dmg-background.png"
 
-          rm -rf "$STAGE_DIR"
-          mkdir -p "$STAGE_DIR"
-          cp -R "$APP_PATH" "$STAGE_DIR/Mumble.app"
-          ln -s /Applications "$STAGE_DIR/Applications"
+          python3 - <<'PY'
+          import os
+          from PIL import Image, ImageDraw, ImageFont
 
-          hdiutil create \
-            -volname "Mumble" \
-            -srcfolder "$STAGE_DIR" \
-            -ov \
-            -format UDZO \
-            "$RELEASE_DMG"
+          width, height = 720, 460
+          image = Image.new("RGB", (width, height), "#1f2937")
+          draw = ImageDraw.Draw(image)
+
+          # Split background to suggest source (left) -> destination (right).
+          draw.rectangle((width // 2, 0, width, height), fill="#74caeb")
+
+          arrow = [
+              (324, 184), (386, 184), (386, 146),
+              (446, 230), (386, 314), (386, 276), (324, 276),
+          ]
+          draw.polygon(arrow, fill="#374151")
+
+          draw.ellipse((70, 120, 290, 340), fill="#dff4ff")
+          draw.ellipse((430, 120, 650, 340), fill="#dff4ff")
+
+          def load_font(size: int, bold: bool = False):
+              candidates = [
+                  "/System/Library/Fonts/Supplemental/Helvetica.ttc",
+                  "/System/Library/Fonts/Supplemental/Arial.ttf",
+                  "/Library/Fonts/Arial.ttf",
+              ]
+              for path in candidates:
+                  if os.path.exists(path):
+                      try:
+                          return ImageFont.truetype(path, size=size)
+                      except OSError:
+                          continue
+              return ImageFont.load_default()
+
+          title_font = load_font(34, bold=True)
+          caption_font = load_font(22)
+          label_font = load_font(26, bold=True)
+
+          draw.text((88, 40), "Drag this...", font=caption_font, fill="#f3f4f6")
+          draw.text((446, 40), "...into this.", font=caption_font, fill="#0f172a")
+
+          draw.text((82, 370), "Mumble.app", font=label_font, fill="#f3f4f6")
+          draw.text((446, 370), "Applications", font=label_font, fill="#0f172a")
+
+          image.save(os.environ["DMG_BACKGROUND_PATH"], format="PNG")
+          PY
+
+          APP_PATH="$APP_PATH" \
+          DMG_BACKGROUND_PATH="$DMG_BACKGROUND_PATH" \
+          python3 -m dmgbuild -s .github/dmgbuild-settings.py "Mumble" "$RELEASE_DMG"
 
           codesign --force --timestamp --sign "Developer ID Application" "$RELEASE_DMG"
           codesign --verify --verbose "$RELEASE_DMG"

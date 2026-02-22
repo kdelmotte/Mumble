@@ -8,6 +8,22 @@ import AppKit
 @MainActor
 final class PermissionManager: ObservableObject {
 
+    private enum MicrophoneAuthorizationState: CustomStringConvertible {
+        case authorized
+        case notDetermined
+        case denied
+        case restricted
+
+        var description: String {
+            switch self {
+            case .authorized: return "authorized"
+            case .notDetermined: return "notDetermined"
+            case .denied: return "denied"
+            case .restricted: return "restricted"
+            }
+        }
+    }
+
     @Published private(set) var microphoneGranted: Bool = false
     @Published private(set) var accessibilityGranted: Bool = false
 
@@ -38,17 +54,20 @@ final class PermissionManager: ObservableObject {
     /// Requests microphone access. The published property updates once the
     /// user responds to the system prompt (or immediately if access was previously determined).
     func requestMicrophonePermission() {
-        let status = AVCaptureDevice.authorizationStatus(for: .audio)
-        logger.info("PermissionManager: request microphone permission (status: \(String(describing: status)))")
+        let status = microphoneAuthorizationStatus()
+        logger.info("PermissionManager: request microphone permission (status: \(status))")
 
         switch status {
         case .authorized:
             microphoneGranted = true
         case .notDetermined:
             bringAppWindowsToFront()
-            AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
+            requestMicrophoneAccess { [weak self] granted in
                 Task { @MainActor [weak self] in
                     self?.microphoneGranted = granted
+                    if !granted {
+                        self?.openMicrophoneSettings()
+                    }
                     // Short delay lets the TCC dialog fully dismiss before we
                     // try to re-activate. Without this, the accessory app's
                     // windows may not come back to the foreground.
@@ -97,8 +116,7 @@ final class PermissionManager: ObservableObject {
     // MARK: - Private Helpers
 
     private func checkMicrophonePermission() {
-        let status = AVCaptureDevice.authorizationStatus(for: .audio)
-        microphoneGranted = (status == .authorized)
+        microphoneGranted = (microphoneAuthorizationStatus() == .authorized)
     }
 
     /// Accessibility can be toggled externally in System Settings at any time, so we poll
@@ -115,6 +133,63 @@ final class PermissionManager: ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
         for window in NSApp.windows where window.isVisible && window.canBecomeKey {
             window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    private func microphoneAuthorizationStatus() -> MicrophoneAuthorizationState {
+        if #available(macOS 14.0, *) {
+            switch AVAudioApplication.shared.recordPermission {
+            case .granted:
+                return .authorized
+            case .denied:
+                return .denied
+            case .undetermined:
+                // Cross-check with AVFoundation status for compatibility with
+                // AVAudioEngine + capture-device based workflows.
+                switch AVCaptureDevice.authorizationStatus(for: .audio) {
+                case .authorized: return .authorized
+                case .notDetermined: return .notDetermined
+                case .denied: return .denied
+                case .restricted: return .restricted
+                @unknown default: return .denied
+                }
+            @unknown default:
+                return .denied
+            }
+        }
+
+        switch AVCaptureDevice.authorizationStatus(for: .audio) {
+        case .authorized: return .authorized
+        case .notDetermined: return .notDetermined
+        case .denied: return .denied
+        case .restricted: return .restricted
+        @unknown default: return .denied
+        }
+    }
+
+    private func requestMicrophoneAccess(completion: @escaping (Bool) -> Void) {
+        if #available(macOS 14.0, *) {
+            AVAudioApplication.requestRecordPermission { granted in
+                // Some machines still surface capture-device permission state.
+                // If permission remains undetermined, retry through AVCapture.
+                if granted {
+                    completion(true)
+                    return
+                }
+
+                if AVCaptureDevice.authorizationStatus(for: .audio) == .notDetermined {
+                    AVCaptureDevice.requestAccess(for: .audio) { captureGranted in
+                        completion(captureGranted)
+                    }
+                } else {
+                    completion(false)
+                }
+            }
+            return
+        }
+
+        AVCaptureDevice.requestAccess(for: .audio) { granted in
+            completion(granted)
         }
     }
 }

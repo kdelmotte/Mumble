@@ -67,6 +67,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.setActivationPolicy(.regular)
         }
 
+        if isRunningFromDiskImage() {
+            NSApp.setActivationPolicy(.regular)
+            STTLogger.shared.warning("App launched from disk image; blocking startup until installed in Applications")
+            presentInstallFromApplicationsAlert()
+            return
+        }
+
         // 2. Set up the menu bar status item.
         let menuBar = MenuBarManager()
         menuBar.dictationManager = appState.dictationManager
@@ -242,6 +249,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for window in NSApp.windows where window.isVisible && window.canBecomeKey {
             window.makeKeyAndOrderFront(nil)
         }
+    }
+
+    private func presentInstallFromApplicationsAlert() {
+        let alert = NSAlert()
+        alert.messageText = "Install Mumble Before Opening"
+        alert.informativeText = "Mumble is currently running from the downloaded disk image. Drag Mumble.app to Applications, then open it from Applications."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Open Applications Folder")
+        alert.addButton(withTitle: "Quit")
+
+        NSApp.activate(ignoringOtherApps: true)
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications"))
+        }
+        NSApp.terminate(nil)
+    }
+
+    private func isRunningFromDiskImage() -> Bool {
+        let normalizedPath = (Bundle.main.bundlePath as NSString).standardizingPath
+        return normalizedPath.hasPrefix("/Volumes/")
     }
 
     // MARK: - Dictation Count Subscription
