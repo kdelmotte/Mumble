@@ -59,6 +59,13 @@ final class MenuBarManager: NSObject {
 
     // MARK: - Setup
 
+    /// Converts DictationManager's state flags to a menu bar status.
+    nonisolated static func statusFor(isDictating: Bool, isProcessing: Bool) -> MenuBarStatus {
+        if isDictating { return .recording }
+        if isProcessing { return .transcribing }
+        return .idle
+    }
+
     /// Creates the status item and installs the dropdown menu. Call once at app launch.
     func setup() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -116,8 +123,17 @@ final class MenuBarManager: NSObject {
         subtitleItem.isEnabled = false
         subtitleItem.indentationLevel = 1
 
+        let statusMenuItem = NSMenuItem(
+            title: "Status: \(status.label)",
+            action: nil,
+            keyEquivalent: ""
+        )
+        statusMenuItem.isEnabled = false
+        statusMenuItem.indentationLevel = 1
+
         newMenu.addItem(titleItem)
         newMenu.addItem(subtitleItem)
+        newMenu.addItem(statusMenuItem)
         newMenu.addItem(.separator())
 
         // --- Settings ---

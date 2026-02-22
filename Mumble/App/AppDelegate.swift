@@ -32,6 +32,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Dedicated cancellable for the current DictationManager's transcription count.
     private var transcriptionCountCancellable: AnyCancellable?
 
+    /// Dedicated cancellable for the current DictationManager's status flags.
+    private var dictationStatusCancellable: AnyCancellable?
+
     /// Reference to the onboarding window so we can bring it to front on
     /// reopen or close it when onboarding completes.
     private var onboardingWindow: NSWindow?
@@ -91,6 +94,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
                 // Also subscribe to transcriptionCount changes on the new manager.
                 self.subscribeToDictationCount(manager)
+                self.subscribeToDictationStatus(manager)
             }
             .store(in: &cancellables)
 
@@ -180,7 +184,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Welcome to Mumble"
         window.styleMask = [.titled, .closable]
-        window.setContentSize(NSSize(width: 520, height: 620))
+        window.setContentSize(NSSize(width: 520, height: 700))
         window.center()
         window.isReleasedWhenClosed = false
         window.hidesOnDeactivate = false
@@ -253,6 +257,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .sink { [weak self] _ in
                 self?.menuBarManager?.rebuildMenu()
             }
+    }
+
+    /// Subscribes to DictationManager state flags and updates menu bar status/icon.
+    private func subscribeToDictationStatus(_ manager: DictationManager?) {
+        dictationStatusCancellable?.cancel()
+        dictationStatusCancellable = nil
+
+        guard let manager else {
+            menuBarManager?.updateStatus(.idle)
+            return
+        }
+
+        dictationStatusCancellable = Publishers.CombineLatest(
+            manager.$isDictating,
+            manager.$isProcessing
+        )
+        .receive(on: RunLoop.main)
+        .sink { [weak self] isDictating, isProcessing in
+            let status = MenuBarManager.statusFor(
+                isDictating: isDictating,
+                isProcessing: isProcessing
+            )
+            self?.menuBarManager?.updateStatus(status)
+        }
     }
 
     // MARK: - Notification Subscriptions

@@ -96,7 +96,7 @@ struct VocabularyTabView: View {
             }
             .padding(.top, 20)
         }
-        .onChange(of: viewModel.vocabularyConfig) { _ in
+        .onChange(of: viewModel.vocabularyConfig) { _, _ in
             viewModel.saveVocabularyConfig()
         }
     }

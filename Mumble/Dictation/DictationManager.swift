@@ -372,11 +372,16 @@ final class DictationManager: ObservableObject {
                     appContext: appContext,
                     tone: toneProfile,
                     apiKey: apiKey,
-                    vocabularySection: vocabularyConfig.llmPromptSection
+                    vocabularySection: vocabularyConfig.llmPromptSection,
+                    vocabularyEntries: vocabularyConfig.validEntries
                 )
             } else {
-                let toneFormatted = applyToneTransformation(rawTranscript, tone: toneProfile)
-                finalText = VocabularyReplacer.apply(vocabularyConfig.validEntries, to: toneFormatted)
+                finalText = Self.applyRuleBasedFormatting(
+                    rawTranscript,
+                    tone: toneProfile,
+                    vocabularyEntries: vocabularyConfig.validEntries,
+                    toneTransformer: toneTransformer
+                )
             }
 
             // Insert text at the cursor position.
@@ -412,9 +417,17 @@ final class DictationManager: ObservableObject {
 
     // MARK: - Tone Transformation
 
-    /// Applies tone transformation to the transcribed text using ToneTransformer.
-    private func applyToneTransformation(_ text: String, tone: ToneProfile) -> String {
-        toneTransformer.transform(text, tone: tone)
+    /// Applies local rule-based formatting:
+    /// 1) tone transformation
+    /// 2) deterministic vocabulary replacements
+    nonisolated static func applyRuleBasedFormatting(
+        _ text: String,
+        tone: ToneProfile,
+        vocabularyEntries: [VocabularyEntry],
+        toneTransformer: ToneTransformer = ToneTransformer()
+    ) -> String {
+        let toneFormatted = toneTransformer.transform(text, tone: tone)
+        return VocabularyReplacer.apply(vocabularyEntries, to: toneFormatted)
     }
 
     /// Formats text using the LLM service, falling back to rule-based
@@ -424,7 +437,8 @@ final class DictationManager: ObservableObject {
         appContext: AppContext,
         tone: ToneProfile,
         apiKey: String,
-        vocabularySection: String? = nil
+        vocabularySection: String? = nil,
+        vocabularyEntries: [VocabularyEntry] = []
     ) async -> String {
         let category = FormattingCategory.classify(appContext)
         let systemPrompt = category.systemPrompt(for: tone, vocabularySection: vocabularySection)
@@ -444,7 +458,12 @@ final class DictationManager: ObservableObject {
                 "errorType": String(describing: type(of: error))
             ])
             logger.warning("DictationManager: LLM formatting failed, falling back to rule-based - \(error.localizedDescription)")
-            return applyToneTransformation(text, tone: tone)
+            return Self.applyRuleBasedFormatting(
+                text,
+                tone: tone,
+                vocabularyEntries: vocabularyEntries,
+                toneTransformer: toneTransformer
+            )
         }
     }
 }

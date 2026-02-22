@@ -22,8 +22,8 @@ final class OnboardingViewModelTests: XCTestCase {
 
     // MARK: - Constants & Initial State
 
-    func testTotalSteps_isSix() {
-        XCTAssertEqual(OnboardingViewModel.totalSteps, 6)
+    func testTotalSteps_isSeven() {
+        XCTAssertEqual(OnboardingViewModel.totalSteps, 7)
     }
 
     func testInitialState_currentStepIsZero() {
@@ -154,8 +154,12 @@ final class OnboardingViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.canProceedFromStep(5))
     }
 
+    func testCanProceedFromStep6_alwaysTrue() {
+        XCTAssertTrue(viewModel.canProceedFromStep(6))
+    }
+
     func testCanProceedFromStep_outOfRangePositive_returnsFalse() {
-        XCTAssertFalse(viewModel.canProceedFromStep(6))
+        XCTAssertFalse(viewModel.canProceedFromStep(7))
     }
 
     func testCanProceedFromStep_outOfRangeNegative_returnsFalse() {

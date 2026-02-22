@@ -99,6 +99,10 @@ final class ShortcutRecorder {
         let relevantFlags: NSEvent.ModifierFlags = [.command, .option, .control, .shift, .function]
         let modifiers = event.modifierFlags.intersection(relevantFlags)
 
+        // Reject bare-key shortcuts (e.g. just "D") to avoid accidental
+        // activation while typing in normal apps.
+        guard !modifiers.isEmpty else { return }
+
         let binding = ShortcutBinding(
             modifierFlagsRaw: modifiers.rawValue,
             keyCode: event.keyCode

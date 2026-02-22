@@ -151,10 +151,19 @@ final class AudioRecorder: ObservableObject {
                 mScope: kAudioObjectPropertyScopeGlobal,
                 mElement: kAudioObjectPropertyElementMain
             )
-            var name: CFString = "" as CFString
-            var nameSize = UInt32(MemoryLayout<CFString>.size)
-            status = AudioObjectGetPropertyData(deviceID, &nameAddress, 0, nil, &nameSize, &name)
-            guard status == noErr else { continue }
+            var name: CFString?
+            var nameSize = UInt32(MemoryLayout<CFString?>.size)
+            status = withUnsafeMutableBytes(of: &name) { nameBytes in
+                AudioObjectGetPropertyData(
+                    deviceID,
+                    &nameAddress,
+                    0,
+                    nil,
+                    &nameSize,
+                    nameBytes.baseAddress!
+                )
+            }
+            guard status == noErr, let name else { continue }
 
             // Device UID.
             var uidAddress = AudioObjectPropertyAddress(
@@ -162,10 +171,19 @@ final class AudioRecorder: ObservableObject {
                 mScope: kAudioObjectPropertyScopeGlobal,
                 mElement: kAudioObjectPropertyElementMain
             )
-            var uid: CFString = "" as CFString
-            var uidSize = UInt32(MemoryLayout<CFString>.size)
-            status = AudioObjectGetPropertyData(deviceID, &uidAddress, 0, nil, &uidSize, &uid)
-            guard status == noErr else { continue }
+            var uid: CFString?
+            var uidSize = UInt32(MemoryLayout<CFString?>.size)
+            status = withUnsafeMutableBytes(of: &uid) { uidBytes in
+                AudioObjectGetPropertyData(
+                    deviceID,
+                    &uidAddress,
+                    0,
+                    nil,
+                    &uidSize,
+                    uidBytes.baseAddress!
+                )
+            }
+            guard status == noErr, let uid else { continue }
 
             results.append((name: name as String, uid: uid as String))
         }
@@ -337,27 +355,31 @@ final class AudioRecorder: ObservableObject {
     private nonisolated func setAudioEngineInputDevice(engine: AVAudioEngine, uid: String) throws {
         // Resolve device ID from UID.
         var deviceID = AudioDeviceID(0)
-        var uidCF: CFString = uid as CFString
-        var translation = AudioValueTranslation(
-            mInputData: &uidCF,
-            mInputDataSize: UInt32(MemoryLayout<CFString>.size),
-            mOutputData: &deviceID,
-            mOutputDataSize: UInt32(MemoryLayout<AudioDeviceID>.size)
-        )
-        var translationSize = UInt32(MemoryLayout<AudioValueTranslation>.size)
+        var uidCF: CFString? = uid as CFString
         var address = AudioObjectPropertyAddress(
             mSelector: kAudioHardwarePropertyDeviceForUID,
             mScope: kAudioObjectPropertyScopeGlobal,
             mElement: kAudioObjectPropertyElementMain
         )
-        let status = AudioObjectGetPropertyData(
-            AudioObjectID(kAudioObjectSystemObject),
-            &address,
-            0,
-            nil,
-            &translationSize,
-            &translation
-        )
+        let status = withUnsafeMutableBytes(of: &uidCF) { uidBytes in
+            withUnsafeMutableBytes(of: &deviceID) { deviceBytes in
+                var translation = AudioValueTranslation(
+                    mInputData: uidBytes.baseAddress!,
+                    mInputDataSize: UInt32(MemoryLayout<CFString?>.size),
+                    mOutputData: deviceBytes.baseAddress!,
+                    mOutputDataSize: UInt32(MemoryLayout<AudioDeviceID>.size)
+                )
+                var translationSize = UInt32(MemoryLayout<AudioValueTranslation>.size)
+                return AudioObjectGetPropertyData(
+                    AudioObjectID(kAudioObjectSystemObject),
+                    &address,
+                    0,
+                    nil,
+                    &translationSize,
+                    &translation
+                )
+            }
+        }
         guard status == noErr, deviceID != 0 else {
             throw AudioRecorderError.deviceSelectionFailed(uid: uid)
         }

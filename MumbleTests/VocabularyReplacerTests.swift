@@ -95,4 +95,28 @@ final class VocabularyReplacerTests: XCTestCase {
         let result = VocabularyReplacer.apply(entries, to: "I asked cloud")
         XCTAssertEqual(result, "I asked cloud")
     }
+
+    // MARK: - Dictation Rule-Based Formatting
+
+    func testRuleBasedFormatting_appliesToneAndVocabulary() {
+        let entries = [VocabularyEntry(spoken: "cloud", corrected: "Claude")]
+        let result = DictationManager.applyRuleBasedFormatting(
+            "i asked cloud about it",
+            tone: .casual,
+            vocabularyEntries: entries
+        )
+
+        XCTAssertTrue(result.hasPrefix("I"), "Tone formatting should capitalize first word. Got: \(result)")
+        XCTAssertTrue(result.contains("Claude"), "Vocabulary replacement should apply after tone formatting. Got: \(result)")
+    }
+
+    func testRuleBasedFormatting_emptyVocabulary_stillAppliesTone() {
+        let result = DictationManager.applyRuleBasedFormatting(
+            "hello there",
+            tone: .professional,
+            vocabularyEntries: []
+        )
+
+        XCTAssertEqual(result, "Hello there.", "Tone formatting should still run when vocabulary list is empty.")
+    }
 }

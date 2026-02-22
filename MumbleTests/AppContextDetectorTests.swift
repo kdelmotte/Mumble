@@ -99,4 +99,27 @@ final class AppContextDetectorTests: XCTestCase {
         XCTAssertEqual(context1, context2, "Identical AppContext values should be equal")
         XCTAssertNotEqual(context1, context3, "Different AppContext values should not be equal")
     }
+
+    // MARK: - Menu Bar Status Mapping
+
+    func testMenuBarStatus_dictatingWinsWhenBothFlagsTrue() {
+        XCTAssertEqual(
+            MenuBarManager.statusFor(isDictating: true, isProcessing: true),
+            .recording
+        )
+    }
+
+    func testMenuBarStatus_processingWhenOnlyProcessingTrue() {
+        XCTAssertEqual(
+            MenuBarManager.statusFor(isDictating: false, isProcessing: true),
+            .transcribing
+        )
+    }
+
+    func testMenuBarStatus_idleWhenNeitherFlagTrue() {
+        XCTAssertEqual(
+            MenuBarManager.statusFor(isDictating: false, isProcessing: false),
+            .idle
+        )
+    }
 }

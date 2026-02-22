@@ -65,9 +65,10 @@ final class AppContextDetector {
             return nil
         }
 
-        // Force cast is safe: AXUIElement is a CoreFoundation opaque type and
-        // the conditional downcast always succeeds (compiler-verified).
-        let windowElement = windowValue as! AXUIElement
+        guard CFGetTypeID(windowValue) == AXUIElementGetTypeID() else {
+            return nil
+        }
+        let windowElement = unsafeBitCast(windowValue, to: AXUIElement.self)
 
         var titleValue: CFTypeRef?
         guard AXUIElementCopyAttributeValue(windowElement, kAXTitleAttribute as CFString, &titleValue) == .success else {

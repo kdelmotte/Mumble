@@ -74,6 +74,12 @@ struct SettingsTabView: View {
             Text("Uses AI to clean up filler words, fix grammar, handle corrections, and format text based on the app you're typing in.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+            if !viewModel.isLLMFormattingEnabled {
+                Text("Turning this off disables contextual vocabulary corrections. Word pairs become simple global replacements.")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
         } header: {
             Text("Text Formatting")
         }
