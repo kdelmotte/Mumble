@@ -109,19 +109,27 @@ jobs:
           echo "Stapling failed after 3 attempts"
           exit 1
 
-      - name: Package for release
+      - name: Package DMG for release
         run: |
           APP_PATH="$RUNNER_TEMP/build/Release/Mumble.app"
-          TAG="${GITHUB_REF_NAME}"
-          RELEASE_ZIP="$RUNNER_TEMP/Mumble.zip"
-          ditto -c -k --keepParent "$APP_PATH" "$RELEASE_ZIP"
-          echo "RELEASE_ZIP=$RELEASE_ZIP" >> "$GITHUB_ENV"
-          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          RELEASE_DMG="$RUNNER_TEMP/Mumble.dmg"
+
+          hdiutil create \
+            -volname "Mumble" \
+            -srcfolder "$APP_PATH" \
+            -ov \
+            -format UDZO \
+            "$RELEASE_DMG"
+
+          codesign --force --timestamp --sign "Developer ID Application" "$RELEASE_DMG"
+          codesign --verify --verbose "$RELEASE_DMG"
+
+          echo "RELEASE_DMG=$RELEASE_DMG" >> "$GITHUB_ENV"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ env.RELEASE_ZIP }}
+          files: ${{ env.RELEASE_DMG }}
           generate_release_notes: true
 
       - name: Clean up keychain
