@@ -63,6 +63,13 @@ jobs:
           codesign --verify --deep --strict "$APP_PATH"
           codesign -d --verbose=2 "$APP_PATH" 2>&1 | grep -q "flags=0x10000(runtime)"
 
+      - name: Verify microphone entitlement
+        run: |
+          APP_PATH="$RUNNER_TEMP/build/Release/Mumble.app"
+          ENTITLEMENTS_PATH="$RUNNER_TEMP/mumble-entitlements.plist"
+          codesign -d --entitlements :- "$APP_PATH" > "$ENTITLEMENTS_PATH"
+          /usr/libexec/PlistBuddy -c "Print :com.apple.security.device.audio-input" "$ENTITLEMENTS_PATH" | grep -q "true"
+
       - name: Notarize
         timeout-minutes: 50
         env:
@@ -158,14 +165,14 @@ jobs:
                           continue
               return ImageFont.load_default()
 
-          title_font = load_font(34, bold=True)
+          title_font = load_font(36, bold=True)
           caption_font = load_font(22)
           label_font = load_font(26, bold=True)
 
-          draw.text((88, 40), "Drag this...", font=caption_font, fill="#f3f4f6")
-          draw.text((446, 40), "...into this.", font=caption_font, fill="#0f172a")
+          draw.text((120, 24), "Install Mumble", font=title_font, fill="#f9fafb")
+          draw.text((80, 72), "Drag Mumble.app to Applications", font=caption_font, fill="#f3f4f6")
 
-          draw.text((82, 370), "Mumble.app", font=label_font, fill="#f3f4f6")
+          draw.text((102, 370), "Mumble.app", font=label_font, fill="#f3f4f6")
           draw.text((446, 370), "Applications", font=label_font, fill="#0f172a")
 
           image.save(os.environ["DMG_BACKGROUND_PATH"], format="PNG")
