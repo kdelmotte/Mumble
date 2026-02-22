@@ -124,7 +124,7 @@ jobs:
           DMG_BACKGROUND_PATH="$RUNNER_TEMP/dmg-background.png"
           DMG_PYTHON="$DMG_PYTHON"
 
-          "$DMG_PYTHON" - <<'PY'
+          DMG_BACKGROUND_PATH="$DMG_BACKGROUND_PATH" "$DMG_PYTHON" - <<'PY'
           import os
           from PIL import Image, ImageDraw, ImageFont
 
