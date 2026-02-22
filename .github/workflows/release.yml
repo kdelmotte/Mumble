@@ -111,15 +111,20 @@ jobs:
 
       - name: Install DMG packaging dependencies
         run: |
-          python3 -m pip install --quiet dmgbuild pillow
+          DMG_VENV="$RUNNER_TEMP/dmgbuild-venv"
+          python3 -m venv "$DMG_VENV"
+          "$DMG_VENV/bin/python" -m pip install --quiet --upgrade pip
+          "$DMG_VENV/bin/python" -m pip install --quiet dmgbuild pillow
+          echo "DMG_PYTHON=$DMG_VENV/bin/python" >> "$GITHUB_ENV"
 
       - name: Package DMG for release
         run: |
           APP_PATH="$RUNNER_TEMP/build/Release/Mumble.app"
           RELEASE_DMG="$RUNNER_TEMP/Mumble.dmg"
           DMG_BACKGROUND_PATH="$RUNNER_TEMP/dmg-background.png"
+          DMG_PYTHON="$DMG_PYTHON"
 
-          python3 - <<'PY'
+          "$DMG_PYTHON" - <<'PY'
           import os
           from PIL import Image, ImageDraw, ImageFont
 
@@ -168,7 +173,7 @@ jobs:
 
           APP_PATH="$APP_PATH" \
           DMG_BACKGROUND_PATH="$DMG_BACKGROUND_PATH" \
-          python3 -m dmgbuild -s .github/dmgbuild-settings.py "Mumble" "$RELEASE_DMG"
+          "$DMG_PYTHON" -m dmgbuild -s .github/dmgbuild-settings.py "Mumble" "$RELEASE_DMG"
 
           codesign --force --timestamp --sign "Developer ID Application" "$RELEASE_DMG"
           codesign --verify --verbose "$RELEASE_DMG"
