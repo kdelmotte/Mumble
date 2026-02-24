@@ -2,7 +2,7 @@
 // Mumble
 //
 // The "Settings" tab in the Settings sidebar. Contains API key management,
-// microphone selection, launch at login, and sound configuration.
+// microphone selection, launch at login, sound configuration, and analytics preferences.
 
 import SwiftUI
 
@@ -26,6 +26,7 @@ struct SettingsTabView: View {
                     microphoneSection
                     generalSection
                     soundsSection
+                    analyticsSection
                 }
                 .formStyle(.grouped)
                 .scrollDisabled(true)
@@ -167,6 +168,34 @@ struct SettingsTabView: View {
         Binding(
             get: { viewModel.soundPlayer.volume },
             set: { viewModel.soundPlayer.volume = $0 }
+        )
+    }
+
+    // MARK: - Analytics
+
+    private var analyticsSection: some View {
+        Section("Analytics") {
+            Toggle("Send anonymous usage data", isOn: analyticsEnabled)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("When enabled, Mumble sends anonymous product analytics about:")
+                Text("• App activity and onboarding progress")
+                Text("• Feature usage and settings changes")
+                Text("• Error categories and reliability signals")
+                Text("Your voice audio and transcript content are sent directly to Groq using your API key for transcription, and are not included in Mumble analytics.")
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// Two-way binding that inverts `Analytics.isOptedOut` so the toggle reads
+    /// as "enabled = sending data".
+    private var analyticsEnabled: Binding<Bool> {
+        Binding(
+            get: { !Analytics.isOptedOut },
+            set: { Analytics.isOptedOut = !$0 }
         )
     }
 }
