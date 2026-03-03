@@ -151,3 +151,78 @@ final class TranscriptionParserTests: XCTestCase {
         XCTAssertFalse(error.errorDescription!.isEmpty, "timeout should have a non-empty description")
     }
 }
+
+final class TranscriptionHistoryStoreTests: XCTestCase {
+
+    private let suiteName = "TranscriptionHistoryStoreTests"
+    private let historyKey = "com.mumble.transcriptionHistory.tests"
+
+    private var defaults: UserDefaults!
+    private var store: TranscriptionHistoryStore!
+
+    override func setUp() {
+        super.setUp()
+        defaults = UserDefaults(suiteName: suiteName)
+        defaults.removePersistentDomain(forName: suiteName)
+        store = TranscriptionHistoryStore(
+            userDefaults: defaults,
+            userDefaultsKey: historyKey,
+            maxEntries: 5
+        )
+    }
+
+    override func tearDown() {
+        defaults.removePersistentDomain(forName: suiteName)
+        defaults = nil
+        store = nil
+        super.tearDown()
+    }
+
+    func testAppend_insertsNewestFirstAndCapsAtFive() {
+        for index in 1...6 {
+            _ = store.append(
+                "Entry \(index)",
+                createdAt: Date(timeIntervalSince1970: TimeInterval(index))
+            )
+        }
+
+        let entries = store.load()
+
+        XCTAssertEqual(entries.count, 5)
+        XCTAssertEqual(entries.map(\.text), [
+            "Entry 6",
+            "Entry 5",
+            "Entry 4",
+            "Entry 3",
+            "Entry 2",
+        ])
+    }
+
+    func testAppend_trimsWhitespaceBeforeSaving() {
+        _ = store.append("  hello world  ")
+
+        XCTAssertEqual(store.load().first?.text, "hello world")
+    }
+
+    func testDelete_removesOnlyMatchingEntry() throws {
+        _ = store.append("First")
+        _ = store.append("Second")
+
+        let originalEntries = store.load()
+        let idToDelete = try XCTUnwrap(originalEntries.last?.id)
+
+        let updatedEntries = store.delete(id: idToDelete)
+
+        XCTAssertEqual(updatedEntries.count, 1)
+        XCTAssertEqual(updatedEntries.first?.text, "Second")
+    }
+
+    func testClear_removesAllPersistedEntries() {
+        _ = store.append("Recover me")
+
+        store.clear()
+
+        XCTAssertTrue(store.load().isEmpty)
+        XCTAssertNil(defaults.data(forKey: historyKey))
+    }
+}

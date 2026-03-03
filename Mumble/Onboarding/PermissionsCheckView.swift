@@ -79,7 +79,7 @@ struct PermissionsCheckView: View {
                 .font(.system(size: 16))
                 .foregroundStyle(.green)
 
-            Text("Audio is sent to your own Groq instance for transcription. No data is stored.")
+            Text("Audio is sent to your own Groq instance for transcription. The last five completed transcripts are stored locally on this Mac and can be cleared in Settings.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

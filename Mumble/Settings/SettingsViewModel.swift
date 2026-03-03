@@ -90,6 +90,12 @@ final class SettingsViewModel: ObservableObject {
     /// Whether an API key test is currently in flight.
     @Published var isTesting: Bool = false
 
+    /// The total number of completed transcriptions.
+    @Published private(set) var transcriptionCount: Int = 0
+
+    /// The latest completed transcriptions available for recovery.
+    @Published private(set) var recentTranscriptions: [TranscriptionHistoryEntry] = []
+
     // MARK: - Shortcut State
 
     /// The currently configured dictation shortcut.
@@ -120,6 +126,7 @@ final class SettingsViewModel: ObservableObject {
     // MARK: - Shortcut Recording
 
     private let shortcutRecorder = ShortcutRecorder()
+    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Init
 
@@ -146,6 +153,7 @@ final class SettingsViewModel: ObservableObject {
         loadMaskedKey()
         refreshDevices()
         applySelectedDevice()
+        bindDictationState()
     }
 
     // MARK: - API Key
@@ -231,17 +239,26 @@ final class SettingsViewModel: ObservableObject {
         applySelectedDevice()
     }
 
-    // MARK: - Transcription Count
-
-    /// The total number of transcriptions performed, sourced from DictationManager.
-    var transcriptionCount: Int {
-        dictationManager?.transcriptionCount ?? 0
-    }
+    // MARK: - Transcription History
 
     /// Resets the lifetime transcription counter to zero.
     func resetTranscriptionCount() {
+        transcriptionCount = 0
         dictationManager?.transcriptionCount = 0
-        objectWillChange.send()
+    }
+
+    func copyRecentTranscription(_ entry: TranscriptionHistoryEntry) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(entry.text, forType: .string)
+    }
+
+    func deleteRecentTranscription(id: TranscriptionHistoryEntry.ID) {
+        dictationManager?.deleteRecentTranscription(id: id)
+    }
+
+    func clearRecentTranscriptions() {
+        dictationManager?.clearRecentTranscriptions()
     }
 
     // MARK: - App Version
@@ -299,6 +316,29 @@ final class SettingsViewModel: ObservableObject {
     /// Persists the current vocabulary config to UserDefaults.
     func saveVocabularyConfig() {
         vocabularyConfig.save()
+    }
+
+    // MARK: - Private Helpers
+
+    private func bindDictationState() {
+        transcriptionCount = dictationManager?.transcriptionCount ?? 0
+        recentTranscriptions = dictationManager?.recentTranscriptions ?? []
+
+        guard let dictationManager else { return }
+
+        dictationManager.$transcriptionCount
+            .receive(on: RunLoop.main)
+            .sink { [weak self] count in
+                self?.transcriptionCount = count
+            }
+            .store(in: &cancellables)
+
+        dictationManager.$recentTranscriptions
+            .receive(on: RunLoop.main)
+            .sink { [weak self] entries in
+                self?.recentTranscriptions = entries
+            }
+            .store(in: &cancellables)
     }
 
 }

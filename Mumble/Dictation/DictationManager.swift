@@ -28,6 +28,9 @@ final class DictationManager: ObservableObject {
         }
     }
 
+    /// The latest completed transcriptions, persisted locally for recovery.
+    @Published private(set) var recentTranscriptions: [TranscriptionHistoryEntry]
+
     // MARK: - Debug Access
 
     /// The raw transcript text from the most recent successful transcription
@@ -49,6 +52,7 @@ final class DictationManager: ObservableObject {
     private let permissionManager: PermissionManager
     private let toneTransformer: ToneTransformer
     private let llmFormattingService: LLMFormattingService
+    private let transcriptionHistoryStore: TranscriptionHistoryStore
     private let hud: DictationHUD
 
     private let logger = STTLogger.shared
@@ -119,6 +123,7 @@ final class DictationManager: ObservableObject {
         permissionManager: PermissionManager? = nil,
         toneTransformer: ToneTransformer = ToneTransformer(),
         llmFormattingService: LLMFormattingService = .shared,
+        transcriptionHistoryStore: TranscriptionHistoryStore = TranscriptionHistoryStore(),
         hud: DictationHUD? = nil
     ) {
         self.shortcutMonitor = shortcutMonitor
@@ -131,10 +136,12 @@ final class DictationManager: ObservableObject {
         self.permissionManager = permissionManager ?? PermissionManager()
         self.toneTransformer = toneTransformer
         self.llmFormattingService = llmFormattingService
+        self.transcriptionHistoryStore = transcriptionHistoryStore
         self.hud = hud ?? DictationHUD()
 
         // Restore persisted transcription count.
         self.transcriptionCount = UserDefaults.standard.integer(forKey: DictationManager.transcriptionCountKey)
+        self.recentTranscriptions = transcriptionHistoryStore.load()
     }
 
     deinit {
@@ -190,6 +197,15 @@ final class DictationManager: ObservableObject {
     func updateShortcut(_ binding: ShortcutBinding) {
         shortcutMonitor.shortcut = binding
         logger.info("DictationManager: shortcut updated to \(binding.displayString)")
+    }
+
+    func deleteRecentTranscription(id: TranscriptionHistoryEntry.ID) {
+        recentTranscriptions = transcriptionHistoryStore.delete(id: id)
+    }
+
+    func clearRecentTranscriptions() {
+        transcriptionHistoryStore.clear()
+        recentTranscriptions = []
     }
 
     // MARK: - Shortcut Handlers
@@ -383,6 +399,8 @@ final class DictationManager: ObservableObject {
                     toneTransformer: toneTransformer
                 )
             }
+
+            recentTranscriptions = transcriptionHistoryStore.append(finalText)
 
             // Insert text at the cursor position.
             textInserter.insertText(finalText)

@@ -27,6 +27,80 @@ struct TranscriptionRequest {
     }
 }
 
+// MARK: - Transcription History
+
+/// A locally persisted, user-recoverable transcription snippet.
+struct TranscriptionHistoryEntry: Identifiable, Codable, Equatable {
+    let id: UUID
+    let createdAt: Date
+    let text: String
+
+    init(id: UUID = UUID(), createdAt: Date = Date(), text: String) {
+        self.id = id
+        self.createdAt = createdAt
+        self.text = text
+    }
+}
+
+/// Stores the most recent completed transcriptions in UserDefaults as JSON.
+struct TranscriptionHistoryStore {
+    let userDefaults: UserDefaults
+    let userDefaultsKey: String
+    let maxEntries: Int
+
+    init(
+        userDefaults: UserDefaults = .standard,
+        userDefaultsKey: String = "com.mumble.transcriptionHistory",
+        maxEntries: Int = 5
+    ) {
+        self.userDefaults = userDefaults
+        self.userDefaultsKey = userDefaultsKey
+        self.maxEntries = Swift.max(1, maxEntries)
+    }
+
+    func load() -> [TranscriptionHistoryEntry] {
+        guard let data = userDefaults.data(forKey: userDefaultsKey),
+              let entries = try? JSONDecoder().decode([TranscriptionHistoryEntry].self, from: data)
+        else {
+            return []
+        }
+        return Array(entries.prefix(maxEntries))
+    }
+
+    func append(_ text: String, createdAt: Date = Date()) -> [TranscriptionHistoryEntry] {
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else { return load() }
+
+        var entries = load()
+        entries.insert(TranscriptionHistoryEntry(createdAt: createdAt, text: trimmedText), at: 0)
+        save(entries)
+        return load()
+    }
+
+    func delete(id: TranscriptionHistoryEntry.ID) -> [TranscriptionHistoryEntry] {
+        var entries = load()
+        entries.removeAll { $0.id == id }
+        save(entries)
+        return load()
+    }
+
+    func clear() {
+        userDefaults.removeObject(forKey: userDefaultsKey)
+    }
+
+    func save(_ entries: [TranscriptionHistoryEntry]) {
+        let cappedEntries = Array(entries.prefix(maxEntries))
+        guard !cappedEntries.isEmpty else {
+            userDefaults.removeObject(forKey: userDefaultsKey)
+            return
+        }
+
+        if let data = try? JSONEncoder().encode(cappedEntries) {
+            userDefaults.set(data, forKey: userDefaultsKey)
+        }
+    }
+}
+
 // MARK: - Transcription Error
 
 /// Errors that can occur during audio transcription via the Groq API.
