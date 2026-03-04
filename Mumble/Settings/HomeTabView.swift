@@ -55,61 +55,6 @@ struct HomeTabView: View {
                             }
                         }
                     }
-
-                    Section {
-                        if viewModel.recentTranscriptions.isEmpty {
-                            Text("Your last five completed transcriptions will appear here so you can recover text if paste fails.")
-                                .font(.callout)
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        } else {
-                            ForEach(viewModel.recentTranscriptions) { entry in
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack(alignment: .center) {
-                                        Text(entry.createdAt.formatted(date: .abbreviated, time: .shortened))
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-
-                                        Spacer()
-
-                                        Button("Copy") {
-                                            viewModel.copyRecentTranscription(entry)
-                                        }
-                                        .font(.callout)
-                                        .buttonStyle(.borderless)
-
-                                        Button("Delete") {
-                                            viewModel.deleteRecentTranscription(id: entry.id)
-                                        }
-                                        .font(.callout)
-                                        .buttonStyle(.borderless)
-                                    }
-
-                                    Text(entry.text)
-                                        .font(.callout)
-                                        .textSelection(.enabled)
-                                        .lineLimit(3)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                }
-                                .padding(.vertical, 4)
-                            }
-                        }
-                    } header: {
-                        HStack {
-                            Text("Recent Transcriptions")
-                            Spacer()
-
-                            if !viewModel.recentTranscriptions.isEmpty {
-                                Button("Clear All") {
-                                    viewModel.clearRecentTranscriptions()
-                                }
-                                .font(.callout)
-                                .buttonStyle(.borderless)
-                            }
-                        }
-                    } footer: {
-                        Text("Stored locally on this Mac only. Keeps the latest five completed transcriptions.")
-                    }
                 }
                 .formStyle(.grouped)
                 .scrollDisabled(true)

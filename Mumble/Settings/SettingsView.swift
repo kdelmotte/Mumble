@@ -10,6 +10,7 @@ import SwiftUI
 
 enum SettingsTab: String, CaseIterable, Identifiable {
     case home
+    case history
     case settings
     case shortcut
     case tone
@@ -20,6 +21,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .home:       return "Home"
+        case .history:    return "History"
         case .settings:   return "Settings"
         case .shortcut:   return "Shortcut"
         case .tone:       return "Tone"
@@ -30,6 +32,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     var systemImage: String {
         switch self {
         case .home:       return "house"
+        case .history:    return "clock.arrow.circlepath"
         case .settings:   return "gearshape"
         case .shortcut:   return "keyboard"
         case .tone:       return "waveform"
@@ -41,6 +44,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     var headerImageName: String {
         switch self {
         case .home:       return "MumbleIconHome"
+        case .history:    return "MumbleIconHistory"
         case .settings:   return "MumbleIconSettings"
         case .shortcut:   return "MumbleIconShortcut"
         case .tone:       return "MumbleIconTone"
@@ -68,6 +72,8 @@ struct SettingsView: View {
             switch selectedTab {
             case .home:
                 HomeTabView(viewModel: viewModel)
+            case .history:
+                HistoryTabView(viewModel: viewModel)
             case .settings:
                 SettingsTabView(viewModel: viewModel)
             case .shortcut:
@@ -77,6 +83,9 @@ struct SettingsView: View {
             case .vocabulary:
                 VocabularyTabView(viewModel: viewModel)
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showHistory)) { _ in
+            selectedTab = .history
         }
         .onReceive(NotificationCenter.default.publisher(for: .showVocabulary)) { _ in
             selectedTab = .vocabulary

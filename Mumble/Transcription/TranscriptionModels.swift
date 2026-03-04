@@ -42,60 +42,86 @@ struct TranscriptionHistoryEntry: Identifiable, Codable, Equatable {
     }
 }
 
-/// Stores the most recent completed transcriptions in UserDefaults as JSON.
+/// Stores completed transcriptions from the last 7 days in UserDefaults as JSON.
 struct TranscriptionHistoryStore {
     let userDefaults: UserDefaults
     let userDefaultsKey: String
-    let maxEntries: Int
+    let retentionInterval: TimeInterval
 
     init(
         userDefaults: UserDefaults = .standard,
         userDefaultsKey: String = "com.mumble.transcriptionHistory",
-        maxEntries: Int = 5
+        retentionInterval: TimeInterval = 7 * 24 * 60 * 60
     ) {
         self.userDefaults = userDefaults
         self.userDefaultsKey = userDefaultsKey
-        self.maxEntries = Swift.max(1, maxEntries)
+        self.retentionInterval = Swift.max(1, retentionInterval)
     }
 
-    func load() -> [TranscriptionHistoryEntry] {
-        guard let data = userDefaults.data(forKey: userDefaultsKey),
-              let entries = try? JSONDecoder().decode([TranscriptionHistoryEntry].self, from: data)
-        else {
-            return []
+    func load(asOf: Date = Date()) -> [TranscriptionHistoryEntry] {
+        let storedEntries = decodedEntries()
+        let prunedEntries = prune(storedEntries, asOf: asOf)
+
+        if prunedEntries != storedEntries {
+            persist(prunedEntries)
         }
-        return Array(entries.prefix(maxEntries))
+
+        return prunedEntries
     }
 
-    func append(_ text: String, createdAt: Date = Date()) -> [TranscriptionHistoryEntry] {
+    func append(_ text: String, createdAt: Date = Date(), asOf: Date = Date()) -> [TranscriptionHistoryEntry] {
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedText.isEmpty else { return load() }
+        guard !trimmedText.isEmpty else { return load(asOf: asOf) }
 
-        var entries = load()
+        var entries = load(asOf: asOf)
         entries.insert(TranscriptionHistoryEntry(createdAt: createdAt, text: trimmedText), at: 0)
-        save(entries)
-        return load()
+
+        let savedEntries = prune(entries, asOf: asOf)
+        persist(savedEntries)
+        return savedEntries
     }
 
-    func delete(id: TranscriptionHistoryEntry.ID) -> [TranscriptionHistoryEntry] {
-        var entries = load()
+    func delete(id: TranscriptionHistoryEntry.ID, asOf: Date = Date()) -> [TranscriptionHistoryEntry] {
+        var entries = load(asOf: asOf)
         entries.removeAll { $0.id == id }
-        save(entries)
-        return load()
+
+        let savedEntries = prune(entries, asOf: asOf)
+        persist(savedEntries)
+        return savedEntries
     }
 
     func clear() {
         userDefaults.removeObject(forKey: userDefaultsKey)
     }
 
-    func save(_ entries: [TranscriptionHistoryEntry]) {
-        let cappedEntries = Array(entries.prefix(maxEntries))
-        guard !cappedEntries.isEmpty else {
+    func save(_ entries: [TranscriptionHistoryEntry], asOf: Date = Date()) {
+        let prunedEntries = prune(entries, asOf: asOf)
+        persist(prunedEntries)
+    }
+
+    private func decodedEntries() -> [TranscriptionHistoryEntry] {
+        guard let data = userDefaults.data(forKey: userDefaultsKey),
+              let entries = try? JSONDecoder().decode([TranscriptionHistoryEntry].self, from: data)
+        else {
+            return []
+        }
+        return entries
+    }
+
+    private func prune(_ entries: [TranscriptionHistoryEntry], asOf: Date) -> [TranscriptionHistoryEntry] {
+        let cutoff = asOf.addingTimeInterval(-retentionInterval)
+        return entries
+            .filter { $0.createdAt >= cutoff }
+            .sorted { $0.createdAt > $1.createdAt }
+    }
+
+    private func persist(_ entries: [TranscriptionHistoryEntry]) {
+        guard !entries.isEmpty else {
             userDefaults.removeObject(forKey: userDefaultsKey)
             return
         }
 
-        if let data = try? JSONEncoder().encode(cappedEntries) {
+        if let data = try? JSONEncoder().encode(entries) {
             userDefaults.set(data, forKey: userDefaultsKey)
         }
     }

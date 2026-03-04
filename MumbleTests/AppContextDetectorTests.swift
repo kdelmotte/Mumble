@@ -122,4 +122,20 @@ final class AppContextDetectorTests: XCTestCase {
             .idle
         )
     }
+
+    @MainActor
+    func testMenuBarMenu_includesHistoryAndRemovesStatusRow() throws {
+        let titles = MenuBarManager()
+            .buildMenu(transcriptionCount: 42)
+            .items
+            .map(\.title)
+
+        let countIndex = try XCTUnwrap(titles.firstIndex(of: "42 transcriptions"))
+        let historyIndex = try XCTUnwrap(titles.firstIndex(of: "History…"))
+        let settingsIndex = try XCTUnwrap(titles.firstIndex(of: "Settings…"))
+
+        XCTAssertLessThan(countIndex, historyIndex)
+        XCTAssertLessThan(historyIndex, settingsIndex)
+        XCTAssertFalse(titles.contains(where: { $0.hasPrefix("Status:") }))
+    }
 }

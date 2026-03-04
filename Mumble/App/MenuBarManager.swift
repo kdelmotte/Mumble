@@ -11,7 +11,7 @@ import SwiftUI
 
 // MARK: - MenuBarStatus
 
-/// The current operational state displayed in the menu bar dropdown.
+/// The current operational state represented by the menu bar icon.
 enum MenuBarStatus {
     case idle
     case recording
@@ -45,11 +45,14 @@ final class MenuBarManager: NSObject {
     private var statusItem: NSStatusItem?
     private var menu: NSMenu?
 
-    /// The current operational status shown in the dropdown.
+    /// The current operational status used for the menu bar icon.
     private(set) var status: MenuBarStatus = .idle
 
     /// External callback invoked when the user selects "Settings...".
     var onOpenSettings: (() -> Void)?
+
+    /// External callback invoked when the user selects "History...".
+    var onOpenHistory: (() -> Void)?
 
     /// External callback invoked when the user selects "Vocabulary...".
     var onOpenVocabulary: (() -> Void)?
@@ -91,7 +94,7 @@ final class MenuBarManager: NSObject {
 
     // MARK: - Status Updates
 
-    /// Updates the operational status displayed in the menu bar icon and dropdown.
+    /// Updates the operational status displayed in the menu bar icon.
     func updateStatus(_ newStatus: MenuBarStatus) {
         status = newStatus
 
@@ -105,38 +108,39 @@ final class MenuBarManager: NSObject {
 
     // MARK: - Menu Construction
 
-    /// Rebuilds the dropdown menu to reflect current state. Called automatically when
-    /// status or dictation state changes.
+    /// Rebuilds the dropdown menu to reflect current state.
     func rebuildMenu() {
+        let count = dictationManager?.transcriptionCount ?? 0
+        let newMenu = buildMenu(transcriptionCount: count)
+        self.menu = newMenu
+        statusItem?.menu = newMenu
+    }
+
+    func buildMenu(transcriptionCount: Int) -> NSMenu {
         let newMenu = NSMenu()
 
-        // --- Title + transcription count ---
         let titleItem = NSMenuItem(title: "Mumble", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
+        newMenu.addItem(titleItem)
 
-        let count = dictationManager?.transcriptionCount ?? 0
         let subtitleItem = NSMenuItem(
-            title: count == 1 ? "1 transcription" : "\(count) transcriptions",
+            title: transcriptionCount == 1 ? "1 transcription" : "\(transcriptionCount) transcriptions",
             action: nil,
             keyEquivalent: ""
         )
         subtitleItem.isEnabled = false
         subtitleItem.indentationLevel = 1
+        newMenu.addItem(subtitleItem)
 
-        let statusMenuItem = NSMenuItem(
-            title: "Status: \(status.label)",
-            action: nil,
+        let historyItem = NSMenuItem(
+            title: "History\u{2026}",
+            action: #selector(openHistoryAction),
             keyEquivalent: ""
         )
-        statusMenuItem.isEnabled = false
-        statusMenuItem.indentationLevel = 1
-
-        newMenu.addItem(titleItem)
-        newMenu.addItem(subtitleItem)
-        newMenu.addItem(statusMenuItem)
+        historyItem.target = self
+        newMenu.addItem(historyItem)
         newMenu.addItem(.separator())
 
-        // --- Settings ---
         let settingsItem = NSMenuItem(
             title: "Settings\u{2026}",
             action: #selector(openSettingsAction),
@@ -146,7 +150,6 @@ final class MenuBarManager: NSObject {
         settingsItem.target = self
         newMenu.addItem(settingsItem)
 
-        // --- Vocabulary ---
         let vocabularyItem = NSMenuItem(
             title: "Vocabulary\u{2026}",
             action: #selector(openVocabularyAction),
@@ -155,7 +158,6 @@ final class MenuBarManager: NSObject {
         vocabularyItem.target = self
         newMenu.addItem(vocabularyItem)
 
-        // --- About ---
         let aboutItem = NSMenuItem(
             title: "About Mumble",
             action: #selector(openAboutAction),
@@ -166,7 +168,6 @@ final class MenuBarManager: NSObject {
 
         newMenu.addItem(.separator())
 
-        // --- Quit ---
         let quitItem = NSMenuItem(
             title: "Quit Mumble",
             action: #selector(quitAction),
@@ -176,14 +177,17 @@ final class MenuBarManager: NSObject {
         quitItem.target = self
         newMenu.addItem(quitItem)
 
-        self.menu = newMenu
-        statusItem?.menu = newMenu
+        return newMenu
     }
 
     // MARK: - Menu Actions
 
     @objc private func openSettingsAction() {
         onOpenSettings?()
+    }
+
+    @objc private func openHistoryAction() {
+        onOpenHistory?()
     }
 
     @objc private func openVocabularyAction() {

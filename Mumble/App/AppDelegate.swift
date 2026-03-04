@@ -80,6 +80,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menuBar.onOpenSettings = { [weak self] in
             self?.showSettingsWindow()
         }
+        menuBar.onOpenHistory = { [weak self] in
+            self?.showSettingsWindow()
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .showHistory, object: nil)
+            }
+        }
         menuBar.onOpenVocabulary = { [weak self] in
             self?.showSettingsWindow()
             DispatchQueue.main.async {

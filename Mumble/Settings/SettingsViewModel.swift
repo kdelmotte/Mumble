@@ -93,7 +93,7 @@ final class SettingsViewModel: ObservableObject {
     /// The total number of completed transcriptions.
     @Published private(set) var transcriptionCount: Int = 0
 
-    /// The latest completed transcriptions available for recovery.
+    /// Completed transcriptions from the last 7 days available for recovery.
     @Published private(set) var recentTranscriptions: [TranscriptionHistoryEntry] = []
 
     // MARK: - Shortcut State
@@ -261,6 +261,10 @@ final class SettingsViewModel: ObservableObject {
         dictationManager?.clearRecentTranscriptions()
     }
 
+    func refreshRecentTranscriptions() {
+        dictationManager?.refreshRecentTranscriptions()
+    }
+
     // MARK: - App Version
 
     /// The human-readable app version string, e.g. "1.0 (42)".
@@ -321,6 +325,7 @@ final class SettingsViewModel: ObservableObject {
     // MARK: - Private Helpers
 
     private func bindDictationState() {
+        dictationManager?.refreshRecentTranscriptions()
         transcriptionCount = dictationManager?.transcriptionCount ?? 0
         recentTranscriptions = dictationManager?.recentTranscriptions ?? []
 

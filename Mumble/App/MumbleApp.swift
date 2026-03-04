@@ -224,6 +224,9 @@ extension Notification.Name {
     /// Posted when the app should open the onboarding window.
     static let showOnboarding = Notification.Name("Mumble.showOnboarding")
 
+    /// Posted when the app should open Settings directly to the History tab.
+    static let showHistory = Notification.Name("Mumble.showHistory")
+
     /// Posted when the app should open Settings directly to the Vocabulary tab.
     static let showVocabulary = Notification.Name("Mumble.showVocabulary")
 }

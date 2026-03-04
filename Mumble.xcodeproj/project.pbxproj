@@ -66,6 +66,7 @@
 		E44E1265D10008D139AF8454 /* DictationHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 457FC8C1E4B8E00792F4A979 /* DictationHUD.swift */; };
 		E49C4524A8B53D84266EC790 /* GroqTranscriptionServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 537147B80D8255F7D17552B5 /* GroqTranscriptionServiceTests.swift */; };
 		E500D457D74AD3E6682DA920 /* VocabularyConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00952F556097DE66190389C /* VocabularyConfigTests.swift */; };
+		F0C8A491B25D4F50A4A26110 /* HistoryTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C8A491B25D4F50A4A26111 /* HistoryTabView.swift */; };
 		F64A82DCE77F7B593207A454 /* VocabularyTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF1ED3969836F71963F221A6 /* VocabularyTabView.swift */; };
 		F6D76D5BB5560F2A2E7F403A /* LLMFormattingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2CEBE34DB2C50ED703703D /* LLMFormattingService.swift */; };
 		F76054D2C68743586D7F1172 /* LLMFormattingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 362E27C067146AF55003160E /* LLMFormattingServiceTests.swift */; };
@@ -145,6 +146,7 @@
 		E32F54C444A6795CF67B83C8 /* ShortcutRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRecorder.swift; sourceTree = "<group>"; };
 		EA4FA6ACE3A227260F280C8D /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
 		EBEB95095F3FF1A872DF7EEF /* MumbleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MumbleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F0C8A491B25D4F50A4A26111 /* HistoryTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryTabView.swift; sourceTree = "<group>"; };
 		F07FE3168ABBCF70175B3800 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F56EFC1EAFB50A5B1AC8B667 /* Mumble.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mumble.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7A48AB9153C743F1B8C9CAA /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
@@ -207,6 +209,7 @@
 		16012A652949E94804B390ED /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				F0C8A491B25D4F50A4A26111 /* HistoryTabView.swift */,
 				75D59DEB149D775F191EE556 /* HomeTabView.swift */,
 				9CA9FE562B2261B460CBCAF0 /* SettingsTabView.swift */,
 				5F319B20C1CB48B4BE196AA5 /* SettingsView.swift */,
@@ -458,6 +461,7 @@
 				3E1B974881CCC33E5EFFFB4B /* FormattingContext.swift in Sources */,
 				905FF816144F5278C91EEE5A /* GroqTranscriptionService.swift in Sources */,
 				2B7C67BF0DA9BEFD167D9DAF /* HomeTabView.swift in Sources */,
+				F0C8A491B25D4F50A4A26110 /* HistoryTabView.swift in Sources */,
 				C9D4E8473267123ECDFBA0D8 /* KeychainManager.swift in Sources */,
 				F6D76D5BB5560F2A2E7F403A /* LLMFormattingService.swift in Sources */,
 				A4CCD1E421AE3AB04AC27B10 /* Logger.swift in Sources */,

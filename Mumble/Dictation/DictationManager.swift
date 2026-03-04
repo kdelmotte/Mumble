@@ -28,7 +28,7 @@ final class DictationManager: ObservableObject {
         }
     }
 
-    /// The latest completed transcriptions, persisted locally for recovery.
+    /// Completed transcriptions from the last 7 days, persisted locally for recovery.
     @Published private(set) var recentTranscriptions: [TranscriptionHistoryEntry]
 
     // MARK: - Debug Access
@@ -139,9 +139,10 @@ final class DictationManager: ObservableObject {
         self.transcriptionHistoryStore = transcriptionHistoryStore
         self.hud = hud ?? DictationHUD()
 
-        // Restore persisted transcription count.
+        // Restore persisted state.
         self.transcriptionCount = UserDefaults.standard.integer(forKey: DictationManager.transcriptionCountKey)
-        self.recentTranscriptions = transcriptionHistoryStore.load()
+        self.recentTranscriptions = []
+        refreshRecentTranscriptions()
     }
 
     deinit {
@@ -206,6 +207,10 @@ final class DictationManager: ObservableObject {
     func clearRecentTranscriptions() {
         transcriptionHistoryStore.clear()
         recentTranscriptions = []
+    }
+
+    func refreshRecentTranscriptions() {
+        recentTranscriptions = transcriptionHistoryStore.load()
     }
 
     // MARK: - Shortcut Handlers

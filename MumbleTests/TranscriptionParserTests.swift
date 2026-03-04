@@ -156,6 +156,7 @@ final class TranscriptionHistoryStoreTests: XCTestCase {
 
     private let suiteName = "TranscriptionHistoryStoreTests"
     private let historyKey = "com.mumble.transcriptionHistory.tests"
+    private let referenceDate = Date(timeIntervalSince1970: 1_700_000_000)
 
     private var defaults: UserDefaults!
     private var store: TranscriptionHistoryStore!
@@ -167,7 +168,7 @@ final class TranscriptionHistoryStoreTests: XCTestCase {
         store = TranscriptionHistoryStore(
             userDefaults: defaults,
             userDefaultsKey: historyKey,
-            maxEntries: 5
+            retentionInterval: 7 * 24 * 60 * 60
         )
     }
 
@@ -178,51 +179,120 @@ final class TranscriptionHistoryStoreTests: XCTestCase {
         super.tearDown()
     }
 
-    func testAppend_insertsNewestFirstAndCapsAtFive() {
-        for index in 1...6 {
-            _ = store.append(
-                "Entry \(index)",
-                createdAt: Date(timeIntervalSince1970: TimeInterval(index))
-            )
-        }
+    func testLoad_prunesEntriesOlderThanSevenDaysAndPersistsPrunedList() throws {
+        try seedEntries([
+            makeEntry(text: "At cutoff", daysAgo: 7),
+            makeEntry(text: "Fresh", daysAgo: 1),
+            makeEntry(text: "Expired", daysAgo: 8),
+        ])
 
-        let entries = store.load()
+        let entries = store.load(asOf: referenceDate)
 
-        XCTAssertEqual(entries.count, 5)
         XCTAssertEqual(entries.map(\.text), [
-            "Entry 6",
-            "Entry 5",
-            "Entry 4",
-            "Entry 3",
-            "Entry 2",
+            "Fresh",
+            "At cutoff",
+        ])
+        XCTAssertEqual(try persistedEntries().map(\.text), [
+            "Fresh",
+            "At cutoff",
+        ])
+    }
+
+    func testAppend_dropsExpiredEntriesAndKeepsFreshOnes() throws {
+        try seedEntries([
+            makeEntry(text: "Recent", daysAgo: 6),
+            makeEntry(text: "Expired", daysAgo: 9),
+        ])
+
+        let entries = store.append(
+            "Newest",
+            createdAt: referenceDate,
+            asOf: referenceDate
+        )
+
+        XCTAssertEqual(entries.map(\.text), [
+            "Newest",
+            "Recent",
+        ])
+    }
+
+    func testAppend_preservesNewestFirstOrderingAcrossMixedFreshEntries() {
+        _ = store.append(
+            "Oldest kept",
+            createdAt: referenceDate.addingTimeInterval(-(6 * 24 * 60 * 60)),
+            asOf: referenceDate
+        )
+        _ = store.append(
+            "Middle",
+            createdAt: referenceDate.addingTimeInterval(-(2 * 24 * 60 * 60)),
+            asOf: referenceDate
+        )
+
+        let entries = store.append(
+            "Newest",
+            createdAt: referenceDate,
+            asOf: referenceDate
+        )
+
+        XCTAssertEqual(entries.map(\.text), [
+            "Newest",
+            "Middle",
+            "Oldest kept",
         ])
     }
 
     func testAppend_trimsWhitespaceBeforeSaving() {
-        _ = store.append("  hello world  ")
+        _ = store.append(
+            "  hello world  ",
+            createdAt: referenceDate,
+            asOf: referenceDate
+        )
 
-        XCTAssertEqual(store.load().first?.text, "hello world")
+        XCTAssertEqual(store.load(asOf: referenceDate).first?.text, "hello world")
     }
 
     func testDelete_removesOnlyMatchingEntry() throws {
-        _ = store.append("First")
-        _ = store.append("Second")
+        let entryToKeep = makeEntry(text: "Keep", daysAgo: 1)
+        let entryToDelete = makeEntry(text: "Delete me", daysAgo: 2)
+        let expiredEntry = makeEntry(text: "Expired", daysAgo: 10)
+        try seedEntries([expiredEntry, entryToDelete, entryToKeep])
 
-        let originalEntries = store.load()
-        let idToDelete = try XCTUnwrap(originalEntries.last?.id)
-
-        let updatedEntries = store.delete(id: idToDelete)
+        let updatedEntries = store.delete(
+            id: entryToDelete.id,
+            asOf: referenceDate
+        )
 
         XCTAssertEqual(updatedEntries.count, 1)
-        XCTAssertEqual(updatedEntries.first?.text, "Second")
+        XCTAssertEqual(updatedEntries.first?.text, "Keep")
     }
 
     func testClear_removesAllPersistedEntries() {
-        _ = store.append("Recover me")
+        _ = store.append(
+            "Recover me",
+            createdAt: referenceDate,
+            asOf: referenceDate
+        )
 
         store.clear()
 
-        XCTAssertTrue(store.load().isEmpty)
+        XCTAssertTrue(store.load(asOf: referenceDate).isEmpty)
         XCTAssertNil(defaults.data(forKey: historyKey))
+    }
+
+    private func seedEntries(_ entries: [TranscriptionHistoryEntry]) throws {
+        let data = try JSONEncoder().encode(entries)
+        defaults.set(data, forKey: historyKey)
+    }
+
+    private func persistedEntries() throws -> [TranscriptionHistoryEntry] {
+        let data = try XCTUnwrap(defaults.data(forKey: historyKey))
+        return try JSONDecoder().decode([TranscriptionHistoryEntry].self, from: data)
+    }
+
+    private func makeEntry(text: String, daysAgo: TimeInterval) -> TranscriptionHistoryEntry {
+        TranscriptionHistoryEntry(
+            createdAt: referenceDate.addingTimeInterval(-(daysAgo * 24 * 60 * 60)),
+            text: text
+        )
     }
 }

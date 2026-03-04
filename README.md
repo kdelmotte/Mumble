@@ -44,6 +44,7 @@ Just grab a free API key from [console.groq.com](https://console.groq.com) and y
 
 - **Push-to-talk with Fn** — hold to record, release to transcribe. No clicking, no waiting.
 - **Instant text insertion** — transcribed text drops right into whatever app you're using.
+- **7-day recovery history** — every completed transcription is kept locally for 7 days in a dedicated History tab so you can recover text if paste misses.
 - **Context-aware tone** — Mumble detects the active app and adjusts formatting automatically.
 - **Blazing fast transcription** — powered by Groq's `whisper-large-v3` for maximum accuracy at incredible speed.
 - **Zero clutter** — lives in the menu bar, no Dock icon, no windows in your way.
@@ -95,7 +96,7 @@ Under the hood: **DictationManager** orchestrates everything — shortcut monito
 | **Fn key not working** | System Settings > Keyboard > set "Press fn key to" → **Do Nothing** |
 | **No accessibility permission** | System Settings > Privacy & Security > Accessibility > enable Mumble |
 | **No microphone permission** | System Settings > Privacy & Security > Microphone > enable Mumble |
-| **Text not inserting** | Make sure a text field is focused in the target app before recording |
+| **Text not inserting** | Make sure a text field is focused in the target app before recording. If a paste still misses, open History in Settings and copy the saved transcription. |
 
 > Rebuilt or moved the app? You may need to remove the old Accessibility entry and re-add it.
 
@@ -112,7 +113,6 @@ Under the hood: **DictationManager** orchestrates everything — shortcut monito
 - Multi-language transcription
 - Local Whisper model for offline use
 - User-defined tone profiles
-- Clipboard history for recent transcriptions
 
 ## License
 
