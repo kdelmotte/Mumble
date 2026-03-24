@@ -1,3 +1,4 @@
+import Combine
 import XCTest
 @testable import Mumble
 
@@ -160,114 +161,113 @@ final class TranscriptionHistoryStoreTests: XCTestCase {
 
     private var defaults: UserDefaults!
     private var store: TranscriptionHistoryStore!
+    private var databaseDirectoryURL: URL!
+    private var databaseURL: URL!
 
     override func setUp() {
         super.setUp()
         defaults = UserDefaults(suiteName: suiteName)
         defaults.removePersistentDomain(forName: suiteName)
+        databaseDirectoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        databaseURL = databaseDirectoryURL.appendingPathComponent("history.sqlite")
         store = TranscriptionHistoryStore(
             userDefaults: defaults,
             userDefaultsKey: historyKey,
-            retentionInterval: 7 * 24 * 60 * 60
+            retentionInterval: 7 * 24 * 60 * 60,
+            databaseURL: databaseURL
         )
     }
 
     override func tearDown() {
-        defaults.removePersistentDomain(forName: suiteName)
-        defaults = nil
         store = nil
+        defaults.removePersistentDomain(forName: suiteName)
+        try? FileManager.default.removeItem(at: databaseDirectoryURL)
+        defaults = nil
+        databaseDirectoryURL = nil
+        databaseURL = nil
         super.tearDown()
     }
 
-    func testLoad_prunesEntriesOlderThanSevenDaysAndPersistsPrunedList() throws {
-        try seedEntries([
+    func testMigration_importsLegacyEntriesAndRemovesDefaultsKey() throws {
+        try seedLegacyEntries([
             makeEntry(text: "At cutoff", daysAgo: 7),
             makeEntry(text: "Fresh", daysAgo: 1),
             makeEntry(text: "Expired", daysAgo: 8),
         ])
 
-        let entries = store.load(asOf: referenceDate)
+        let entries = store.loadRecent(limit: 10, asOf: referenceDate)
 
         XCTAssertEqual(entries.map(\.text), [
             "Fresh",
             "At cutoff",
         ])
-        XCTAssertEqual(try persistedEntries().map(\.text), [
-            "Fresh",
-            "At cutoff",
-        ])
+        XCTAssertNil(defaults.data(forKey: historyKey))
     }
 
-    func testAppend_dropsExpiredEntriesAndKeepsFreshOnes() throws {
-        try seedEntries([
-            makeEntry(text: "Recent", daysAgo: 6),
-            makeEntry(text: "Expired", daysAgo: 9),
-        ])
-
-        let entries = store.append(
-            "Newest",
-            createdAt: referenceDate,
-            asOf: referenceDate
-        )
-
-        XCTAssertEqual(entries.map(\.text), [
-            "Newest",
-            "Recent",
-        ])
-    }
-
-    func testAppend_preservesNewestFirstOrderingAcrossMixedFreshEntries() {
-        _ = store.append(
+    func testLoadRecent_returnsNewestFirstAndHonorsLimit() {
+        store.append(
             "Oldest kept",
             createdAt: referenceDate.addingTimeInterval(-(6 * 24 * 60 * 60)),
             asOf: referenceDate
         )
-        _ = store.append(
+        store.append(
             "Middle",
             createdAt: referenceDate.addingTimeInterval(-(2 * 24 * 60 * 60)),
             asOf: referenceDate
         )
-
-        let entries = store.append(
+        store.append(
             "Newest",
             createdAt: referenceDate,
             asOf: referenceDate
         )
 
+        let entries = store.loadRecent(limit: 2, asOf: referenceDate)
+
         XCTAssertEqual(entries.map(\.text), [
             "Newest",
             "Middle",
-            "Oldest kept",
         ])
+        XCTAssertEqual(store.countRecent(asOf: referenceDate), 3)
     }
 
     func testAppend_trimsWhitespaceBeforeSaving() {
-        _ = store.append(
+        store.append(
             "  hello world  ",
             createdAt: referenceDate,
             asOf: referenceDate
         )
 
-        XCTAssertEqual(store.load(asOf: referenceDate).first?.text, "hello world")
+        XCTAssertEqual(store.loadRecent(limit: 1, asOf: referenceDate).first?.text, "hello world")
+    }
+
+    func testPruneExpired_removesEntriesOlderThanSevenDays() throws {
+        try seedLegacyEntries([
+            makeEntry(text: "Recent", daysAgo: 1),
+            makeEntry(text: "Expired", daysAgo: 8),
+        ])
+
+        store.pruneExpired(asOf: referenceDate)
+
+        XCTAssertEqual(store.countRecent(asOf: referenceDate), 1)
+        XCTAssertEqual(store.loadRecent(limit: 10, asOf: referenceDate).map(\.text), ["Recent"])
     }
 
     func testDelete_removesOnlyMatchingEntry() throws {
         let entryToKeep = makeEntry(text: "Keep", daysAgo: 1)
         let entryToDelete = makeEntry(text: "Delete me", daysAgo: 2)
         let expiredEntry = makeEntry(text: "Expired", daysAgo: 10)
-        try seedEntries([expiredEntry, entryToDelete, entryToKeep])
+        try seedLegacyEntries([expiredEntry, entryToDelete, entryToKeep])
 
-        let updatedEntries = store.delete(
-            id: entryToDelete.id,
-            asOf: referenceDate
-        )
+        _ = store.loadRecent(limit: 10, asOf: referenceDate)
+        store.delete(id: entryToDelete.id, asOf: referenceDate)
 
-        XCTAssertEqual(updatedEntries.count, 1)
-        XCTAssertEqual(updatedEntries.first?.text, "Keep")
+        let updatedEntries = store.loadRecent(limit: 10, asOf: referenceDate)
+        XCTAssertEqual(updatedEntries.map(\.text), ["Keep"])
     }
 
     func testClear_removesAllPersistedEntries() {
-        _ = store.append(
+        store.append(
             "Recover me",
             createdAt: referenceDate,
             asOf: referenceDate
@@ -275,18 +275,14 @@ final class TranscriptionHistoryStoreTests: XCTestCase {
 
         store.clear()
 
-        XCTAssertTrue(store.load(asOf: referenceDate).isEmpty)
+        XCTAssertTrue(store.loadRecent(limit: 10, asOf: referenceDate).isEmpty)
+        XCTAssertEqual(store.countRecent(asOf: referenceDate), 0)
         XCTAssertNil(defaults.data(forKey: historyKey))
     }
 
-    private func seedEntries(_ entries: [TranscriptionHistoryEntry]) throws {
+    private func seedLegacyEntries(_ entries: [TranscriptionHistoryEntry]) throws {
         let data = try JSONEncoder().encode(entries)
         defaults.set(data, forKey: historyKey)
-    }
-
-    private func persistedEntries() throws -> [TranscriptionHistoryEntry] {
-        let data = try XCTUnwrap(defaults.data(forKey: historyKey))
-        return try JSONDecoder().decode([TranscriptionHistoryEntry].self, from: data)
     }
 
     private func makeEntry(text: String, daysAgo: TimeInterval) -> TranscriptionHistoryEntry {
@@ -294,5 +290,162 @@ final class TranscriptionHistoryStoreTests: XCTestCase {
             createdAt: referenceDate.addingTimeInterval(-(daysAgo * 24 * 60 * 60)),
             text: text
         )
+    }
+}
+
+@MainActor
+final class SettingsViewModelHistoryTests: XCTestCase {
+
+    private var historyManager: MockHistoryManager!
+    private var viewModel: SettingsViewModel!
+
+    override func setUp() {
+        super.setUp()
+        historyManager = MockHistoryManager()
+        viewModel = SettingsViewModel(
+            loginItemManager: LoginItemManager(),
+            audioRecorder: AudioRecorder(),
+            soundPlayer: SoundPlayer(),
+            historyManager: historyManager,
+            historyPageSize: 50
+        )
+    }
+
+    override func tearDown() {
+        viewModel = nil
+        historyManager = nil
+        super.tearDown()
+    }
+
+    func testInit_doesNotLoadHistoryUntilRequested() {
+        XCTAssertTrue(historyManager.loadLimits.isEmpty)
+        XCTAssertEqual(historyManager.countRequests, 0)
+        XCTAssertTrue(viewModel.historyEntries.isEmpty)
+        XCTAssertEqual(viewModel.visibleHistoryLimit, 0)
+    }
+
+    func testLoadInitialHistory_loadsFirstPageAndSetsHasMoreHistory() {
+        historyManager.storedEntries = makeEntries(count: 120)
+
+        viewModel.loadInitialHistory()
+
+        XCTAssertEqual(historyManager.loadLimits, [50])
+        XCTAssertEqual(viewModel.visibleHistoryLimit, 50)
+        XCTAssertEqual(viewModel.historyEntries.count, 50)
+        XCTAssertEqual(viewModel.historyTotalCount, 120)
+        XCTAssertTrue(viewModel.hasMoreHistory)
+    }
+
+    func testLoadMoreHistory_growsVisibleSlice() {
+        historyManager.storedEntries = makeEntries(count: 120)
+
+        viewModel.loadInitialHistory()
+        viewModel.loadMoreHistory()
+
+        XCTAssertEqual(historyManager.loadLimits, [50, 100])
+        XCTAssertEqual(viewModel.visibleHistoryLimit, 100)
+        XCTAssertEqual(viewModel.historyEntries.count, 100)
+        XCTAssertEqual(viewModel.historyTotalCount, 120)
+        XCTAssertTrue(viewModel.hasMoreHistory)
+    }
+
+    func testDeleteRecentTranscription_updatesHistoryState() {
+        historyManager.storedEntries = makeEntries(count: 3)
+        let deletedID = historyManager.storedEntries[1].id
+
+        viewModel.loadInitialHistory()
+        viewModel.deleteRecentTranscription(id: deletedID)
+        pumpMainRunLoop()
+
+        XCTAssertEqual(viewModel.historyEntries.count, 2)
+        XCTAssertEqual(viewModel.historyTotalCount, 2)
+        XCTAssertFalse(viewModel.historyEntries.contains(where: { $0.id == deletedID }))
+    }
+
+    func testClearRecentTranscriptions_updatesHistoryState() {
+        historyManager.storedEntries = makeEntries(count: 60)
+
+        viewModel.loadInitialHistory()
+        viewModel.clearRecentTranscriptions()
+        pumpMainRunLoop()
+
+        XCTAssertTrue(viewModel.historyEntries.isEmpty)
+        XCTAssertEqual(viewModel.historyTotalCount, 0)
+        XCTAssertFalse(viewModel.hasMoreHistory)
+    }
+
+    func testHistoryRevisionReloadsCurrentVisibleSliceWithoutResettingLimit() {
+        historyManager.storedEntries = makeEntries(count: 120)
+
+        viewModel.loadInitialHistory()
+        viewModel.loadMoreHistory()
+
+        let newestEntry = TranscriptionHistoryEntry(
+            createdAt: Date(timeIntervalSince1970: 2_000_000_000),
+            text: "Newest revision entry"
+        )
+        historyManager.prepend(newestEntry)
+        pumpMainRunLoop()
+
+        XCTAssertEqual(viewModel.visibleHistoryLimit, 100)
+        XCTAssertEqual(historyManager.loadLimits, [50, 100, 100])
+        XCTAssertEqual(viewModel.historyEntries.first?.text, "Newest revision entry")
+        XCTAssertEqual(viewModel.historyEntries.count, 100)
+        XCTAssertEqual(viewModel.historyTotalCount, 121)
+    }
+
+    private func makeEntries(count: Int) -> [TranscriptionHistoryEntry] {
+        (0..<count).map { index in
+            TranscriptionHistoryEntry(
+                createdAt: Date(timeIntervalSince1970: 1_800_000_000 - Double(index)),
+                text: "Entry \(index)"
+            )
+        }
+    }
+
+    private func pumpMainRunLoop() {
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+    }
+}
+
+@MainActor
+private final class MockHistoryManager: TranscriptionHistoryManaging {
+    var storedEntries: [TranscriptionHistoryEntry] = []
+    var loadLimits: [Int] = []
+    var countRequests = 0
+
+    private let revisionSubject = CurrentValueSubject<Int, Never>(0)
+
+    var historyRevisionPublisher: AnyPublisher<Int, Never> {
+        revisionSubject.eraseToAnyPublisher()
+    }
+
+    func loadRecentTranscriptions(limit: Int) -> [TranscriptionHistoryEntry] {
+        loadLimits.append(limit)
+        return Array(
+            storedEntries
+                .sorted { $0.createdAt > $1.createdAt }
+                .prefix(limit)
+        )
+    }
+
+    func countRecentTranscriptions() -> Int {
+        countRequests += 1
+        return storedEntries.count
+    }
+
+    func deleteRecentTranscription(id: TranscriptionHistoryEntry.ID) {
+        storedEntries.removeAll { $0.id == id }
+        revisionSubject.send(revisionSubject.value + 1)
+    }
+
+    func clearRecentTranscriptions() {
+        storedEntries = []
+        revisionSubject.send(revisionSubject.value + 1)
+    }
+
+    func prepend(_ entry: TranscriptionHistoryEntry) {
+        storedEntries.insert(entry, at: 0)
+        revisionSubject.send(revisionSubject.value + 1)
     }
 }

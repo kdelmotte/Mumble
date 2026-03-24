@@ -47,6 +47,23 @@ enum APIKeyStatus: Equatable {
     }
 }
 
+// MARK: - History Access
+
+@MainActor
+protocol TranscriptionHistoryManaging: AnyObject {
+    var historyRevisionPublisher: AnyPublisher<Int, Never> { get }
+    func loadRecentTranscriptions(limit: Int) -> [TranscriptionHistoryEntry]
+    func countRecentTranscriptions() -> Int
+    func deleteRecentTranscription(id: TranscriptionHistoryEntry.ID)
+    func clearRecentTranscriptions()
+}
+
+extension DictationManager: TranscriptionHistoryManaging {
+    var historyRevisionPublisher: AnyPublisher<Int, Never> {
+        $historyRevision.eraseToAnyPublisher()
+    }
+}
+
 // MARK: - SettingsViewModel
 
 @MainActor
@@ -59,6 +76,8 @@ final class SettingsViewModel: ObservableObject {
     let audioRecorder: AudioRecorder
     let soundPlayer: SoundPlayer
     private let transcriptionService: GroqTranscriptionService
+    private let historyManager: TranscriptionHistoryManaging?
+    private let historyPageSize: Int
 
     /// Weak reference avoids a retain cycle when DictationManager also holds
     /// a reference to shared services. The view model only reads from it.
@@ -93,8 +112,20 @@ final class SettingsViewModel: ObservableObject {
     /// The total number of completed transcriptions.
     @Published private(set) var transcriptionCount: Int = 0
 
-    /// Completed transcriptions from the last 7 days available for recovery.
-    @Published private(set) var recentTranscriptions: [TranscriptionHistoryEntry] = []
+    /// The currently loaded page of transcription history entries.
+    @Published private(set) var historyEntries: [TranscriptionHistoryEntry] = []
+
+    /// The total number of retained history entries.
+    @Published private(set) var historyTotalCount: Int = 0
+
+    /// Whether there are more retained entries than are currently loaded.
+    @Published private(set) var hasMoreHistory: Bool = false
+
+    /// `true` while the History tab is refreshing its current page.
+    @Published private(set) var isLoadingHistory: Bool = false
+
+    /// The current History tab page size.
+    @Published private(set) var visibleHistoryLimit: Int = 0
 
     // MARK: - Shortcut State
 
@@ -136,6 +167,8 @@ final class SettingsViewModel: ObservableObject {
         audioRecorder: AudioRecorder,
         soundPlayer: SoundPlayer,
         dictationManager: DictationManager? = nil,
+        historyManager: TranscriptionHistoryManaging? = nil,
+        historyPageSize: Int = 50,
         transcriptionService: GroqTranscriptionService = .shared
     ) {
         self.keychainManager = keychainManager
@@ -143,6 +176,8 @@ final class SettingsViewModel: ObservableObject {
         self.audioRecorder = audioRecorder
         self.soundPlayer = soundPlayer
         self.dictationManager = dictationManager
+        self.historyManager = historyManager ?? dictationManager
+        self.historyPageSize = max(1, historyPageSize)
         self.transcriptionService = transcriptionService
 
         shortcutRecorder.onRecorded = { [weak self] binding in
@@ -154,6 +189,7 @@ final class SettingsViewModel: ObservableObject {
         refreshDevices()
         applySelectedDevice()
         bindDictationState()
+        bindHistoryState()
     }
 
     // MARK: - API Key
@@ -254,15 +290,27 @@ final class SettingsViewModel: ObservableObject {
     }
 
     func deleteRecentTranscription(id: TranscriptionHistoryEntry.ID) {
-        dictationManager?.deleteRecentTranscription(id: id)
+        historyManager?.deleteRecentTranscription(id: id)
     }
 
     func clearRecentTranscriptions() {
-        dictationManager?.clearRecentTranscriptions()
+        historyManager?.clearRecentTranscriptions()
     }
 
-    func refreshRecentTranscriptions() {
-        dictationManager?.refreshRecentTranscriptions()
+    func loadInitialHistoryIfNeeded() {
+        guard visibleHistoryLimit == 0 else { return }
+        loadInitialHistory()
+    }
+
+    func loadInitialHistory() {
+        visibleHistoryLimit = historyPageSize
+        reloadVisibleHistory()
+    }
+
+    func loadMoreHistory() {
+        guard hasMoreHistory, !isLoadingHistory else { return }
+        visibleHistoryLimit += historyPageSize
+        reloadVisibleHistory()
     }
 
     // MARK: - App Version
@@ -325,9 +373,7 @@ final class SettingsViewModel: ObservableObject {
     // MARK: - Private Helpers
 
     private func bindDictationState() {
-        dictationManager?.refreshRecentTranscriptions()
         transcriptionCount = dictationManager?.transcriptionCount ?? 0
-        recentTranscriptions = dictationManager?.recentTranscriptions ?? []
 
         guard let dictationManager else { return }
 
@@ -337,13 +383,36 @@ final class SettingsViewModel: ObservableObject {
                 self?.transcriptionCount = count
             }
             .store(in: &cancellables)
+    }
 
-        dictationManager.$recentTranscriptions
+    private func bindHistoryState() {
+        historyManager?.historyRevisionPublisher
+            .dropFirst()
             .receive(on: RunLoop.main)
-            .sink { [weak self] entries in
-                self?.recentTranscriptions = entries
+            .sink { [weak self] _ in
+                guard let self, self.visibleHistoryLimit > 0 else { return }
+                self.reloadVisibleHistory()
             }
             .store(in: &cancellables)
+    }
+
+    private func reloadVisibleHistory() {
+        isLoadingHistory = true
+        defer { isLoadingHistory = false }
+
+        guard let historyManager, visibleHistoryLimit > 0 else {
+            historyEntries = []
+            historyTotalCount = 0
+            hasMoreHistory = false
+            return
+        }
+
+        let entries = historyManager.loadRecentTranscriptions(limit: visibleHistoryLimit)
+        let totalCount = historyManager.countRecentTranscriptions()
+
+        historyEntries = entries
+        historyTotalCount = totalCount
+        hasMoreHistory = entries.count < totalCount
     }
 
 }

@@ -11,23 +11,18 @@ struct HistoryTabView: View {
     @ObservedObject var viewModel: SettingsViewModel
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                header
+        VStack(spacing: 20) {
+            header
 
-                GradientDivider()
-                    .padding(.horizontal, 40)
+            GradientDivider()
+                .padding(.horizontal, 40)
 
-                Form {
-                    historySection
-                }
-                .formStyle(.grouped)
-                .scrollDisabled(true)
-            }
-            .padding(.top, 20)
+            historyList
         }
+        .padding(.top, 20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear {
-            viewModel.refreshRecentTranscriptions()
+            viewModel.loadInitialHistoryIfNeeded()
         }
     }
 
@@ -48,60 +43,87 @@ struct HistoryTabView: View {
         }
     }
 
-    private var historySection: some View {
-        Section {
-            if viewModel.recentTranscriptions.isEmpty {
-                Text("Completed transcriptions from the last 7 days will appear here so you can recover text if paste fails.")
+    private var historyList: some View {
+        List {
+            Section {
+                if viewModel.isLoadingHistory && viewModel.historyEntries.isEmpty {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                        Spacer()
+                    }
+                    .padding(.vertical, 12)
+                } else if viewModel.historyEntries.isEmpty {
+                    Text("Completed transcriptions from the last 7 days will appear here so you can recover text if paste fails.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    ForEach(viewModel.historyEntries) { entry in
+                        historyRow(for: entry)
+                    }
+                }
+            } header: {
+                HStack {
+                    Text("Recent Transcriptions")
+                    Spacer()
+
+                    if !viewModel.historyEntries.isEmpty {
+                        Button("Clear All") {
+                            viewModel.clearRecentTranscriptions()
+                        }
+                        .font(.callout)
+                        .buttonStyle(.borderless)
+                    }
+                }
+            } footer: {
+                Text("Stored locally on this Mac only. Keeps completed transcriptions from the last 7 days and automatically removes older entries.")
+            }
+
+            Section {
+                Text("Showing \(viewModel.historyEntries.count) of \(viewModel.historyTotalCount) transcriptions")
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            } else {
-                ForEach(viewModel.recentTranscriptions) { entry in
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(alignment: .center) {
-                            Text(entry.createdAt.formatted(date: .abbreviated, time: .shortened))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
 
-                            Spacer()
-
-                            Button("Copy") {
-                                viewModel.copyRecentTranscription(entry)
-                            }
-                            .font(.callout)
-                            .buttonStyle(.borderless)
-
-                            Button("Delete") {
-                                viewModel.deleteRecentTranscription(id: entry.id)
-                            }
-                            .font(.callout)
-                            .buttonStyle(.borderless)
-                        }
-
-                        Text(entry.text)
-                            .font(.callout)
-                            .textSelection(.enabled)
-                            .lineLimit(3)
-                            .fixedSize(horizontal: false, vertical: true)
+                if viewModel.hasMoreHistory {
+                    Button("Load More") {
+                        viewModel.loadMoreHistory()
                     }
-                    .padding(.vertical, 4)
+                    .disabled(viewModel.isLoadingHistory)
                 }
             }
-        } header: {
-            HStack {
-                Text("Recent Transcriptions")
+        }
+        .listStyle(.automatic)
+    }
+
+    private func historyRow(for entry: TranscriptionHistoryEntry) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .center) {
+                Text(entry.createdAt.formatted(date: .abbreviated, time: .shortened))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
                 Spacer()
 
-                if !viewModel.recentTranscriptions.isEmpty {
-                    Button("Clear All") {
-                        viewModel.clearRecentTranscriptions()
-                    }
-                    .font(.callout)
-                    .buttonStyle(.borderless)
+                Button("Copy") {
+                    viewModel.copyRecentTranscription(entry)
                 }
+                .font(.callout)
+                .buttonStyle(.borderless)
+
+                Button("Delete") {
+                    viewModel.deleteRecentTranscription(id: entry.id)
+                }
+                .font(.callout)
+                .buttonStyle(.borderless)
             }
-        } footer: {
-            Text("Stored locally on this Mac only. Keeps completed transcriptions from the last 7 days and automatically removes older entries.")
+
+            Text(entry.text)
+                .font(.callout)
+                .textSelection(.enabled)
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .padding(.vertical, 4)
     }
 }

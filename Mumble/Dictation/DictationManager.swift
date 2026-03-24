@@ -28,8 +28,9 @@ final class DictationManager: ObservableObject {
         }
     }
 
-    /// Completed transcriptions from the last 7 days, persisted locally for recovery.
-    @Published private(set) var recentTranscriptions: [TranscriptionHistoryEntry]
+    /// Monotonic revision used by the Settings history tab to refresh paged results
+    /// after writes without observing the full history collection.
+    @Published private(set) var historyRevision: Int = 0
 
     // MARK: - Debug Access
 
@@ -141,8 +142,6 @@ final class DictationManager: ObservableObject {
 
         // Restore persisted state.
         self.transcriptionCount = UserDefaults.standard.integer(forKey: DictationManager.transcriptionCountKey)
-        self.recentTranscriptions = []
-        refreshRecentTranscriptions()
     }
 
     deinit {
@@ -201,16 +200,21 @@ final class DictationManager: ObservableObject {
     }
 
     func deleteRecentTranscription(id: TranscriptionHistoryEntry.ID) {
-        recentTranscriptions = transcriptionHistoryStore.delete(id: id)
+        transcriptionHistoryStore.delete(id: id)
+        historyRevision += 1
     }
 
     func clearRecentTranscriptions() {
         transcriptionHistoryStore.clear()
-        recentTranscriptions = []
+        historyRevision += 1
     }
 
-    func refreshRecentTranscriptions() {
-        recentTranscriptions = transcriptionHistoryStore.load()
+    func loadRecentTranscriptions(limit: Int) -> [TranscriptionHistoryEntry] {
+        transcriptionHistoryStore.loadRecent(limit: limit)
+    }
+
+    func countRecentTranscriptions() -> Int {
+        transcriptionHistoryStore.countRecent()
     }
 
     // MARK: - Shortcut Handlers
@@ -405,7 +409,8 @@ final class DictationManager: ObservableObject {
                 )
             }
 
-            recentTranscriptions = transcriptionHistoryStore.append(finalText)
+            transcriptionHistoryStore.append(finalText)
+            historyRevision += 1
 
             // Insert text at the cursor position.
             textInserter.insertText(finalText)
