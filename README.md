@@ -16,7 +16,7 @@
 
 <p align="center">
   <a href="https://github.com/kdelmotte/Mumble/releases/latest">
-    <img src="https://img.shields.io/badge/Download_for_macOS-v1.0.0-blue?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS" />
+    <img src="https://img.shields.io/github/v/release/kdelmotte/Mumble?display_name=tag&style=for-the-badge&logo=apple&logoColor=white&label=Download%20for%20macOS" alt="Download for macOS" />
   </a>
   <br/>
   <sub>Signed &amp; notarized &middot; macOS 14+</sub>
