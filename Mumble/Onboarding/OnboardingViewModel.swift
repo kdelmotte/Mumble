@@ -33,6 +33,7 @@ final class OnboardingViewModel: ObservableObject {
     @Published var isTestingKey: Bool = false
     @Published var keyTestResult: KeyTestResult?
     @Published var launchAtLogin: Bool = true
+    @Published var transcriptionConfig: TranscriptionProviderConfig = .load()
 
     // MARK: - Shortcut State
 
@@ -68,27 +69,23 @@ final class OnboardingViewModel: ObservableObject {
     let keychainManager: KeychainManager
     let loginItemManager: LoginItemManager
 
-    private let transcriptionService: GroqTranscriptionService
     private let logger = STTLogger.shared
     private var permissionCancellable: AnyCancellable?
     private var apiKeyCancellable: AnyCancellable?
     private var validationTask: Task<Void, Never>?
 
     static let totalSteps = 7
-    private static let groqAPIKeyPrefix = "gsk_"
 
     // MARK: - Init
 
     init(
         permissionManager: PermissionManager? = nil,
         keychainManager: KeychainManager = .shared,
-        loginItemManager: LoginItemManager = LoginItemManager(),
-        transcriptionService: GroqTranscriptionService = .shared
+        loginItemManager: LoginItemManager = LoginItemManager()
     ) {
         self.permissionManager = permissionManager ?? PermissionManager()
         self.keychainManager = keychainManager
         self.loginItemManager = loginItemManager
-        self.transcriptionService = transcriptionService
 
         shortcutRecorder.onRecorded = { [weak self] binding in
             self?.currentShortcut = binding
@@ -191,40 +188,84 @@ final class OnboardingViewModel: ObservableObject {
 
     // MARK: - API Key
 
+    var selectedProvider: TranscriptionProvider {
+        transcriptionConfig.selectedProvider
+    }
+
+    var selectedModel: TranscriptionModelOption {
+        transcriptionConfig.selectedModel(for: selectedProvider)
+    }
+
+    var availableModels: [TranscriptionModelOption] {
+        selectedProvider.models
+    }
+
+    func selectProvider(_ provider: TranscriptionProvider) {
+        guard provider != selectedProvider else { return }
+
+        var config = transcriptionConfig
+        config.selectedProvider = provider
+        transcriptionConfig = config
+        transcriptionConfig.save()
+
+        resetKeyValidationState(clearAPIKey: true)
+    }
+
+    func selectModel(_ modelID: String) {
+        guard modelID != selectedModel.id else { return }
+
+        var config = transcriptionConfig
+        config.selectModel(modelID, for: selectedProvider)
+        transcriptionConfig = config
+        transcriptionConfig.save()
+
+        resetKeyValidationState(clearAPIKey: false)
+        if !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            handleAPIKeyChange()
+        }
+    }
+
     private func hasValidKeyFormat(_ key: String) -> Bool {
-        key.hasPrefix(Self.groqAPIKeyPrefix) && key.count >= 20
+        key.count >= selectedProvider.minimumKeyLength
     }
 
     private func handleAPIKeyChange() {
-        validationTask?.cancel()
-        validationTask = nil
-        keyTestResult = nil
-        isTestingKey = false
+        resetKeyValidationState(clearAPIKey: false)
 
         let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmed.isEmpty else { return }
 
-        if !trimmed.hasPrefix(Self.groqAPIKeyPrefix) && trimmed.count >= 4 {
-            keyTestResult = .failure("Groq API keys start with \(Self.groqAPIKeyPrefix)")
+        if let prefix = selectedProvider.suggestedKeyPrefix,
+           trimmed.count >= prefix.count,
+           !trimmed.hasPrefix(prefix) {
+            keyTestResult = .failure("\(selectedProvider.displayName) API keys start with \(prefix)")
             return
         }
 
         guard hasValidKeyFormat(trimmed) else { return }
 
         isTestingKey = true
+        let provider = selectedProvider
+        let model = selectedModel
         validationTask = Task {
-            await performValidation(trimmed)
+            await performValidation(trimmed, provider: provider, model: model)
         }
     }
 
-    private func performValidation(_ key: String) async {
+    private func performValidation(
+        _ key: String,
+        provider: TranscriptionProvider,
+        model: TranscriptionModelOption
+    ) async {
+        let service = TranscriptionServiceFactory.service(for: provider)
+
         do {
-            try await transcriptionService.validateAPIKey(key)
+            try await service.validateAPIKey(key, model: model)
             guard !Task.isCancelled else { return }
             keyTestResult = .success
-            saveAPIKey()
-            logger.info("API key validated and saved during onboarding")
+            saveAPIKey(for: provider)
+            logger.info("\(provider.displayName) API key validated and saved during onboarding")
         } catch let error as TranscriptionError {
             guard !Task.isCancelled else { return }
             switch error {
@@ -237,11 +278,15 @@ final class OnboardingViewModel: ObservableObject {
             case .rateLimited:
                 keyTestResult = .failure("Rate limited. Please wait a moment and try again.")
             case .accessDenied:
-                keyTestResult = .failure("Access denied — Groq may be blocking your VPN or proxy. Try disconnecting it.")
+                if provider == .groq {
+                    keyTestResult = .failure("Access denied — Groq may be blocking your VPN or proxy. Try disconnecting it.")
+                } else {
+                    keyTestResult = .failure("Access denied by \(provider.displayName). Please check the key and try again.")
+                }
             default:
                 keyTestResult = .failure(error.localizedDescription)
             }
-            logger.warning("API key validation failed during onboarding: \(error.localizedDescription)")
+            logger.warning("\(provider.displayName) API key validation failed during onboarding: \(error.localizedDescription)")
         } catch {
             guard !Task.isCancelled else { return }
             keyTestResult = .failure("An unexpected error occurred.")
@@ -261,15 +306,15 @@ final class OnboardingViewModel: ObservableObject {
 
         isTestingKey = true
         keyTestResult = nil
-        await performValidation(trimmedKey)
+        await performValidation(trimmedKey, provider: selectedProvider, model: selectedModel)
     }
 
-    func saveAPIKey() {
+    func saveAPIKey(for provider: TranscriptionProvider? = nil) {
         let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedKey.isEmpty else { return }
 
         do {
-            try keychainManager.saveAPIKey(trimmedKey)
+            try keychainManager.saveAPIKey(trimmedKey, for: provider ?? selectedProvider)
         } catch {
             logger.error("Failed to save API key during onboarding: \(error.localizedDescription)")
         }
@@ -461,7 +506,10 @@ final class OnboardingViewModel: ObservableObject {
         }
         demoAudioRecorder = nil
 
-        guard let apiKey = keychainManager.getAPIKey(), !apiKey.isEmpty else {
+        let provider = selectedProvider
+        let model = selectedModel
+
+        guard let apiKey = keychainManager.getAPIKey(for: provider), !apiKey.isEmpty else {
             demoText = "(No API key configured)"
             return
         }
@@ -469,13 +517,30 @@ final class OnboardingViewModel: ObservableObject {
         isDemoTranscribing = true
         Task {
             do {
-                let text = try await transcriptionService.transcribe(audioData: audioData, apiKey: apiKey)
+                let service = TranscriptionServiceFactory.service(for: provider)
+                let text = try await service.transcribe(
+                    audioData: audioData,
+                    apiKey: apiKey,
+                    model: model,
+                    prompt: nil
+                )
                 demoText = String(text.prefix(280))
             } catch {
                 demoText = "(Transcription failed: \(error.localizedDescription))"
                 logger.warning("Demo transcription failed: \(error.localizedDescription)")
             }
             isDemoTranscribing = false
+        }
+    }
+
+    private func resetKeyValidationState(clearAPIKey: Bool) {
+        validationTask?.cancel()
+        validationTask = nil
+        keyTestResult = nil
+        isTestingKey = false
+
+        if clearAPIKey {
+            apiKey = ""
         }
     }
 

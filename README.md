@@ -30,15 +30,17 @@ Because typing is overrated. Mumble sits quietly in your menu bar and lets you d
 
 Casual message to a friend? Mumble keeps it chill. Work email? Mumble cleans it up. You just talk.
 
-### Completely Free
+### Bring Your Own Provider
 
-Mumble is powered by [Groq](https://groq.com)'s `whisper-large-v3` model — the most accurate open speech-to-text model available, running at lightning speed on Groq. Groq's free tier requires **no credit card** and gives you:
+Mumble now supports multiple transcription providers and lets you choose the model you want per provider:
 
-- **2,000 requests/day** — that's 2,000 individual dictations
-- **8 hours of audio/day** (28,800 seconds) — more than enough for all-day use
-- **20 requests/minute** — plenty for natural dictation
+- **Groq**
+- **Fireworks AI**
+- **ElevenLabs**
+- **Deepgram**
+- **AssemblyAI**
 
-Just grab a free API key from [console.groq.com](https://console.groq.com) and you're set. No subscriptions, no trials, no catch.
+If you want the easiest free setup, [Groq](https://groq.com) is still a great default. Its free tier requires **no credit card**, and Mumble can also use a saved Groq key for optional Smart Formatting.
 
 ## What You Get
 
@@ -46,23 +48,23 @@ Just grab a free API key from [console.groq.com](https://console.groq.com) and y
 - **Instant text insertion** — transcribed text drops right into whatever app you're using.
 - **7-day recovery history** — every completed transcription is kept locally for 7 days in a dedicated History tab so you can recover text if paste misses.
 - **Context-aware tone** — Mumble detects the active app and adjusts formatting automatically.
-- **Blazing fast transcription** — powered by Groq's `whisper-large-v3` for maximum accuracy at incredible speed.
+- **Provider and model choice** — pick the transcription provider and model that fit your workflow.
 - **Zero clutter** — lives in the menu bar, no Dock icon, no windows in your way.
 - **Guided setup** — onboarding walks you through API key, permissions, and preferences.
 - **Custom dictionary** — add vocabulary corrections so Mumble always spells your names, jargon, and brand terms the right way.
-- **Smart formatting** — an LLM pass automatically structures your dictation based on the active app (email gets greeting/body/sign-off, messaging stays casual with emoji, code preserves technical terms, and everything else gets clean punctuation). Detected from the frontmost app's bundle ID and page title; toggleable in Settings.
+- **Smart formatting** — an optional Groq-backed LLM pass automatically structures your dictation based on the active app (email gets greeting/body/sign-off, messaging stays casual with emoji, code preserves technical terms, and everything else gets clean punctuation). Detected from the frontmost app's bundle ID and page title; toggleable in Settings.
 
 ## Getting Started
 
 ### Download
 
-Grab the latest release from [GitHub Releases](https://github.com/kdelmotte/Mumble/releases/latest) — the app is signed and notarized, so you can run it straight away. Requires **macOS 14+** (Sonoma) and a free [Groq API key](https://console.groq.com/) (no credit card required).
+Grab the latest release from [GitHub Releases](https://github.com/kdelmotte/Mumble/releases/latest) — the app is signed and notarized, so you can run it straight away. Requires **macOS 14+** (Sonoma) and at least one supported transcription provider API key. If you want Smart Formatting, save a Groq key as well.
 
 The app will walk you through the rest.
 
 ### Build from Source
 
-For contributors or if you prefer to build locally — you'll need Xcode 15+ and a free [Groq API key](https://console.groq.com/).
+For contributors or if you prefer to build locally — you'll need Xcode 15+ and at least one supported transcription provider API key.
 
 ```bash
 brew install xcodegen          # one-time setup
@@ -74,11 +76,11 @@ open Mumble.xcodeproj          # Cmd+R to build and run
 ## How It Works
 
 ```
-    You speak        Mumble listens       Groq transcribes      Smart formatting     Text appears
-  ┌──────────┐      ┌─────────────┐      ┌────────────────┐    ┌───────────────┐    ┌───────────┐
-  │ Hold Fn  │ ──▶  │  Record mic │ ──▶  │  Whisper API   │ ──▶│ Context-aware │ ──▶│ At cursor │
-  └──────────┘      └─────────────┘      └────────────────┘    │   LLM format  │    └───────────┘
-                                                                └───────────────┘
+    You speak        Mumble listens      Selected provider      Optional formatting    Text appears
+  ┌──────────┐      ┌─────────────┐      ┌────────────────┐    ┌────────────────┐    ┌───────────┐
+  │ Hold Fn  │ ──▶  │  Record mic │ ──▶  │ STT API + model│ ──▶│ Groq or local  │ ──▶│ At cursor │
+  └──────────┘      └─────────────┘      └────────────────┘    │ context format │    └───────────┘
+                                                                └────────────────┘
                                                                        ▲
                                                                 ┌──────┴───────┐
                                                                 │ Detect app:  │
@@ -87,7 +89,7 @@ open Mumble.xcodeproj          # Cmd+R to build and run
                                                                 └──────────────┘
 ```
 
-Under the hood: **DictationManager** orchestrates everything — shortcut monitoring, audio recording, Groq API transcription, context-aware formatting, and text insertion via Accessibility APIs.
+Under the hood: **DictationManager** orchestrates everything — shortcut monitoring, audio recording, provider-specific transcription, optional Groq-backed Smart Formatting, and text insertion via Accessibility APIs.
 
 ## Troubleshooting
 

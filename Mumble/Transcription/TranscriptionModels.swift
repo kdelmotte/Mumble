@@ -3,7 +3,7 @@ import SQLite3
 
 // MARK: - Transcription Response
 
-/// Represents the JSON response returned by the Groq Whisper transcription API.
+/// Represents the JSON response returned by Whisper-style transcription APIs.
 struct TranscriptionResponse: Codable {
     let text: String
 }
@@ -370,7 +370,7 @@ private let sqliteTransientDestructor = unsafeBitCast(-1, to: sqlite3_destructor
 
 // MARK: - Transcription Error
 
-/// Errors that can occur during audio transcription via the Groq API.
+/// Errors that can occur during audio transcription.
 enum TranscriptionError: LocalizedError {
     /// No API key has been configured.
     case noAPIKey
@@ -397,15 +397,15 @@ enum TranscriptionError: LocalizedError {
     /// The request did not complete within the allotted time.
     case timeout
 
-    /// The server returned HTTP 403, typically because Groq is blocking a VPN/proxy IP.
+    /// The server returned HTTP 403 and rejected the request.
     case accessDenied
 
     var errorDescription: String? {
         switch self {
         case .noAPIKey:
-            return "No API key configured. Please add your Groq API key in Settings."
+            return "No transcription API key configured. Please add one in Settings."
         case .invalidAPIKey:
-            return "The API key is invalid or has been revoked. Please update your key in Settings."
+            return "The API key is invalid or has been revoked. Please update it in Settings."
         case .networkError(let underlying):
             return "A network error occurred: \(underlying.localizedDescription)"
         case .rateLimited(let retryAfter):
@@ -422,7 +422,7 @@ enum TranscriptionError: LocalizedError {
         case .timeout:
             return "The transcription request timed out. Please try again."
         case .accessDenied:
-            return "Access denied (403). Groq blocks some VPN and proxy connections — try disconnecting your VPN or switching to a different server."
+            return "Access denied (403). The provider rejected this request. If you're using a VPN or proxy, try disconnecting it and try again."
         }
     }
 }

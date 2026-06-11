@@ -21,7 +21,8 @@ struct SettingsTabView: View {
                     .mascotGlow(color: .blue)
 
                 Form {
-                    apiKeySection
+                    transcriptionSection
+                    providerKeysSection
                     formattingSection
                     microphoneSection
                     generalSection
@@ -33,36 +34,91 @@ struct SettingsTabView: View {
             }
             .padding(.top, 20)
         }
-        .sheet(isPresented: $viewModel.isShowingKeySheet) {
-            APIKeySheet(viewModel: viewModel)
+        .sheet(item: $viewModel.editingProvider) { provider in
+            APIKeySheet(viewModel: viewModel, provider: provider)
         }
     }
 
-    // MARK: - API Key
+    // MARK: - Transcription
 
-    private var apiKeySection: some View {
+    private var transcriptionSection: some View {
         Section {
+            Picker("Provider", selection: providerBinding) {
+                ForEach(TranscriptionProvider.allCases) { provider in
+                    Text(provider.displayName)
+                        .tag(provider)
+                }
+            }
+
+            Picker("Model", selection: modelBinding) {
+                ForEach(viewModel.availableModels) { model in
+                    Text(model.displayName)
+                        .tag(model.id)
+                }
+            }
+            .disabled(viewModel.availableModels.count == 1)
+
+            if let detail = viewModel.selectedModel.detail {
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             HStack {
-                if viewModel.maskedAPIKey.isEmpty {
-                    Text("No key configured")
+                if viewModel.maskedAPIKey(for: viewModel.selectedProvider).isEmpty {
+                    Text("No \(viewModel.selectedProvider.displayName) key configured")
                         .foregroundStyle(.secondary)
                 } else {
-                    Text(viewModel.maskedAPIKey)
+                    Text(viewModel.maskedAPIKey(for: viewModel.selectedProvider))
                         .font(.system(.body, design: .monospaced))
                 }
 
                 Spacer()
 
-                Label(viewModel.apiKeyStatus.label, systemImage: viewModel.apiKeyStatus.systemImage)
-                    .foregroundStyle(viewModel.apiKeyStatus.tintColor)
+                let status = viewModel.apiKeyStatus(for: viewModel.selectedProvider)
+                Label(status.label, systemImage: status.systemImage)
+                    .foregroundStyle(status.tintColor)
                     .font(.callout)
             }
 
-            Button("Update Key...") {
-                viewModel.showUpdateKeySheet()
+            Button("Update Selected Provider Key...") {
+                viewModel.showUpdateKeySheet(for: viewModel.selectedProvider)
             }
         } header: {
-            Text("Groq API Key")
+            Text("Transcription")
+        }
+    }
+
+    private var providerKeysSection: some View {
+        Section("Provider Keys") {
+            ForEach(TranscriptionProvider.allCases) { provider in
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(provider.displayName)
+
+                        if viewModel.maskedAPIKey(for: provider).isEmpty {
+                            Text(provider.shortDescription)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text(viewModel.maskedAPIKey(for: provider))
+                                .font(.system(.caption, design: .monospaced))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    let status = viewModel.apiKeyStatus(for: provider)
+                    Label(status.label, systemImage: status.systemImage)
+                        .foregroundStyle(status.tintColor)
+                        .font(.caption)
+
+                    Button("Update...") {
+                        viewModel.showUpdateKeySheet(for: provider)
+                    }
+                }
+            }
         }
     }
 
@@ -72,12 +128,16 @@ struct SettingsTabView: View {
         Section {
             Toggle("Smart formatting", isOn: $viewModel.isLLMFormattingEnabled)
 
-            Text("Uses AI to clean up filler words, fix grammar, handle corrections, and format text based on the app you're typing in.")
+            Text("Uses Groq to clean up filler words, fix grammar, handle corrections, and format text based on the app you're typing in.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
             if !viewModel.isLLMFormattingEnabled {
                 Text("Turning this off disables contextual vocabulary corrections. Word pairs become simple global replacements.")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            } else if !viewModel.hasGroqFormattingKey {
+                Text("Smart formatting needs a saved Groq key. Without one, Mumble falls back to local tone formatting even if another transcription provider is selected.")
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
@@ -182,7 +242,7 @@ struct SettingsTabView: View {
                 Text("• App activity and onboarding progress")
                 Text("• Feature usage and settings changes")
                 Text("• Error categories and reliability signals")
-                Text("Your voice audio and transcript content are sent directly to Groq using your API key for transcription, and are not included in Mumble analytics.")
+                Text("Your voice audio and transcript content are sent directly to the providers you configure for transcription and optional Groq smart formatting, and are not included in Mumble analytics.")
             }
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -198,6 +258,20 @@ struct SettingsTabView: View {
             set: { Analytics.isOptedOut = !$0 }
         )
     }
+
+    private var providerBinding: Binding<TranscriptionProvider> {
+        Binding(
+            get: { viewModel.selectedProvider },
+            set: { viewModel.selectProvider($0) }
+        )
+    }
+
+    private var modelBinding: Binding<String> {
+        Binding(
+            get: { viewModel.selectedModel.id },
+            set: { viewModel.selectModel($0) }
+        )
+    }
 }
 
 // MARK: - APIKeySheet
@@ -205,14 +279,19 @@ struct SettingsTabView: View {
 struct APIKeySheet: View {
 
     @ObservedObject var viewModel: SettingsViewModel
+    let provider: TranscriptionProvider
     @FocusState private var isFieldFocused: Bool
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("Enter Groq API Key")
+            Text("Enter \(provider.displayName) API Key")
                 .font(.mumbleDisplay(size: 18))
 
-            SecureField("gsk_...", text: $viewModel.pendingAPIKey)
+            Link(provider.keySetupLabel, destination: provider.keySetupURL)
+                .font(.callout)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            SecureField(provider.apiKeyPlaceholder, text: $viewModel.pendingAPIKey)
                 .textFieldStyle(.roundedBorder)
                 .focused($isFieldFocused)
                 .onSubmit {
@@ -238,7 +317,7 @@ struct APIKeySheet: View {
 
             HStack {
                 Button("Cancel") {
-                    viewModel.isShowingKeySheet = false
+                    viewModel.editingProvider = nil
                 }
                 .keyboardShortcut(.cancelAction)
                 .buttonStyle(MumbleButtonStyle(isProminent: false))

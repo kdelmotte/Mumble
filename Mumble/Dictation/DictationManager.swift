@@ -2,7 +2,7 @@
 // Mumble
 //
 // Central orchestrator for the dictation workflow: monitors the configured
-// shortcut, records audio, sends it to the Groq API for transcription,
+// shortcut, records audio, sends it to the selected transcription provider,
 // optionally transforms the tone, and inserts the result at the cursor position.
 
 import Combine
@@ -46,7 +46,6 @@ final class DictationManager: ObservableObject {
     let shortcutMonitor: ShortcutMonitor
     private let audioRecorder: AudioRecorder
     private let soundPlayer: SoundPlayer
-    private let groqService: GroqTranscriptionService
     private let appContextDetector: AppContextDetector
     private let textInserter: TextInserter
     private let keychainManager: KeychainManager
@@ -117,7 +116,6 @@ final class DictationManager: ObservableObject {
         shortcutMonitor: ShortcutMonitor = ShortcutMonitor(),
         audioRecorder: AudioRecorder? = nil,
         soundPlayer: SoundPlayer? = nil,
-        groqService: GroqTranscriptionService = .shared,
         appContextDetector: AppContextDetector = AppContextDetector(),
         textInserter: TextInserter = TextInserter(),
         keychainManager: KeychainManager = .shared,
@@ -130,7 +128,6 @@ final class DictationManager: ObservableObject {
         self.shortcutMonitor = shortcutMonitor
         self.audioRecorder = audioRecorder ?? AudioRecorder()
         self.soundPlayer = soundPlayer ?? SoundPlayer()
-        self.groqService = groqService
         self.appContextDetector = appContextDetector
         self.textInserter = textInserter
         self.keychainManager = keychainManager
@@ -241,11 +238,13 @@ final class DictationManager: ObservableObject {
             return
         }
 
-        // 2. Check API key.
-        guard keychainManager.getAPIKey() != nil else {
-            logger.warning("DictationManager: no API key configured, cannot start dictation")
+        // 2. Check API key for the selected provider.
+        let transcriptionConfig = TranscriptionProviderConfig.load()
+        let selectedProvider = transcriptionConfig.selectedProvider
+        guard !(keychainManager.getAPIKey(for: selectedProvider)?.isEmpty ?? true) else {
+            logger.warning("DictationManager: no \(selectedProvider.displayName) API key configured, cannot start dictation")
             hud.show()
-            hud.showError("API key missing")
+            hud.showError("\(selectedProvider.displayName) key missing")
             return
         }
 
@@ -321,7 +320,7 @@ final class DictationManager: ObservableObject {
 
     // MARK: - Transcription Pipeline
 
-    /// Sends audio to the Groq API, applies tone transformation, and inserts
+    /// Sends audio to the selected transcription provider, applies tone transformation, and inserts
     /// the final text at the cursor position.
     private func processTranscription(audioData: Data?) async {
         defer {
@@ -336,11 +335,16 @@ final class DictationManager: ObservableObject {
             return
         }
 
-        // Retrieve API key (re-check in case it was removed mid-session).
-        guard let apiKey = keychainManager.getAPIKey(), !apiKey.isEmpty else {
-            logger.error("DictationManager: API key missing during transcription")
-            hud.showError("API key not configured")
-            lastError = "API key not configured"
+        let transcriptionConfig = TranscriptionProviderConfig.load()
+        let selectedProvider = transcriptionConfig.selectedProvider
+        let selectedModel = transcriptionConfig.selectedModel(for: selectedProvider)
+        let transcriptionService = TranscriptionServiceFactory.service(for: selectedProvider)
+
+        // Retrieve the selected provider key (re-check in case it was removed mid-session).
+        guard let apiKey = keychainManager.getAPIKey(for: selectedProvider), !apiKey.isEmpty else {
+            logger.error("DictationManager: \(selectedProvider.displayName) API key missing during transcription")
+            hud.showError("\(selectedProvider.displayName) key missing")
+            lastError = "\(selectedProvider.displayName) API key not configured"
             return
         }
 
@@ -351,13 +355,15 @@ final class DictationManager: ObservableObject {
         // Load custom vocabulary config.
         let vocabularyConfig = VocabularyConfig.load()
 
-        logger.debug("DictationManager: app context = \(appContext.appName ?? "Unknown"), tone = \(toneProfile.displayName)")
+        logger.debug(
+            "DictationManager: app context = \(appContext.appName ?? "Unknown"), tone = \(toneProfile.displayName), provider = \(selectedProvider.displayName), model = \(selectedModel.id)"
+        )
 
         do {
-            // Send audio to Groq for transcription.
-            let rawTranscript = try await groqService.transcribeWithRetry(
+            let rawTranscript = try await transcriptionService.transcribeWithRetry(
                 audioData: audioData,
-                apiKey: apiKey
+                apiKey: apiKey,
+                model: selectedModel
             )
 
             // Store the raw transcript for debug access.
@@ -389,18 +395,25 @@ final class DictationManager: ObservableObject {
 
             logger.info("DictationManager: transcription received (\(rawTranscript.count) chars)")
 
-            // Apply formatting (LLM-based or rule-based).
+            // Apply formatting (Groq-backed when available, otherwise rule-based).
             let finalText: String
-            if FormattingConfig.isLLMFormattingEnabled {
+            let formattingAPIKey = keychainManager.getAPIKey(for: .groq)
+            let canUseLLMFormatting = FormattingConfig.isLLMFormattingEnabled
+                && !(formattingAPIKey?.isEmpty ?? true)
+
+            if canUseLLMFormatting, let formattingAPIKey {
                 finalText = await formatWithLLM(
                     rawTranscript,
                     appContext: appContext,
                     tone: toneProfile,
-                    apiKey: apiKey,
+                    apiKey: formattingAPIKey,
                     vocabularySection: vocabularyConfig.llmPromptSection,
                     vocabularyEntries: vocabularyConfig.validEntries
                 )
             } else {
+                if FormattingConfig.isLLMFormattingEnabled {
+                    logger.info("DictationManager: no Groq key available for smart formatting, falling back to rule-based formatting")
+                }
                 finalText = Self.applyRuleBasedFormatting(
                     rawTranscript,
                     tone: toneProfile,
@@ -420,8 +433,10 @@ final class DictationManager: ObservableObject {
 
             Analytics.send(.dictationCompleted, parameters: [
                 "charCount": String(finalText.count),
-                "usedLLMFormatting": String(FormattingConfig.isLLMFormattingEnabled),
-                "toneProfile": toneProfile.displayName
+                "usedLLMFormatting": String(canUseLLMFormatting),
+                "toneProfile": toneProfile.displayName,
+                "provider": selectedProvider.rawValue,
+                "model": selectedModel.id
             ])
 
             logger.info("DictationManager: text inserted, total transcriptions = \(transcriptionCount)")

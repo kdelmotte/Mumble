@@ -43,10 +43,10 @@ struct APIKeySetupView: View {
                 .frame(height: 160)
                 .mascotGlow(color: .orange)
 
-            Text("Connect to Groq")
+            Text("Connect a Provider")
                 .font(.mumbleDisplay(size: 28))
 
-            Text("Mumble uses Groq's Whisper model for fast, accurate transcription.")
+            Text("Choose your transcription provider and model, then add the API key you want Mumble to use during dictation.")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -58,20 +58,41 @@ struct APIKeySetupView: View {
 
     private var apiKeyCard: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Link to Groq console
+            Picker("Provider", selection: providerBinding) {
+                ForEach(TranscriptionProvider.allCases) { provider in
+                    Text(provider.displayName)
+                        .tag(provider)
+                }
+            }
+            .pickerStyle(.menu)
+
+            Picker("Model", selection: modelBinding) {
+                ForEach(viewModel.availableModels) { model in
+                    Text(model.displayName)
+                        .tag(model.id)
+                }
+            }
+            .pickerStyle(.menu)
+            .disabled(viewModel.availableModels.count == 1)
+
+            if let detail = viewModel.selectedModel.detail {
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             HStack(spacing: 6) {
                 Image(systemName: "globe")
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
 
-                Link("Get a free API key at console.groq.com",
-                     destination: URL(string: "https://console.groq.com/keys")!)
+                Link(viewModel.selectedProvider.keySetupLabel, destination: viewModel.selectedProvider.keySetupURL)
                     .font(.callout)
             }
 
             // Secure input field
             HStack(spacing: 10) {
-                SecureField("Paste your Groq API key", text: $viewModel.apiKey)
+                SecureField(viewModel.selectedProvider.apiKeyPlaceholder, text: $viewModel.apiKey)
                     .textFieldStyle(.roundedBorder)
                     .focused($isKeyFieldFocused)
 
@@ -133,6 +154,20 @@ struct APIKeySetupView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .themedCard(accent: result == .success ? .green : .red)
+    }
+
+    private var providerBinding: Binding<TranscriptionProvider> {
+        Binding(
+            get: { viewModel.selectedProvider },
+            set: { viewModel.selectProvider($0) }
+        )
+    }
+
+    private var modelBinding: Binding<String> {
+        Binding(
+            get: { viewModel.selectedModel.id },
+            set: { viewModel.selectModel($0) }
+        )
     }
 }
 

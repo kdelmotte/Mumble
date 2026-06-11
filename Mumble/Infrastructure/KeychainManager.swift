@@ -48,12 +48,21 @@ final class KeychainManager {
 
     /// Saves an API key to the Keychain. If a key already exists it will be updated.
     func saveAPIKey(_ key: String) throws {
+        try saveAPIKey(key, accountOverride: account)
+    }
+
+    /// Saves an API key for the given transcription provider.
+    func saveAPIKey(_ key: String, for provider: TranscriptionProvider) throws {
+        try saveAPIKey(key, accountOverride: provider.keychainAccount(baseAccount: account))
+    }
+
+    private func saveAPIKey(_ key: String, accountOverride: String) throws {
         guard let data = key.data(using: .utf8) else {
             throw KeychainError.encodingFailed
         }
 
         // Attempt to update an existing item first.
-        let query = baseQuery()
+        let query = baseQuery(accountOverride: accountOverride)
         let attributesToUpdate: [String: Any] = [
             kSecValueData as String: data
         ]
@@ -69,7 +78,7 @@ final class KeychainManager {
         }
 
         // No existing item – add a new one.
-        var addQuery = baseQuery()
+        var addQuery = baseQuery(accountOverride: accountOverride)
         addQuery[kSecValueData as String] = data
 
         let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
@@ -80,7 +89,16 @@ final class KeychainManager {
 
     /// Retrieves the stored API key from the Keychain, or `nil` if none exists.
     func getAPIKey() -> String? {
-        var query = baseQuery()
+        getAPIKey(accountOverride: account)
+    }
+
+    /// Retrieves the stored API key for the given transcription provider.
+    func getAPIKey(for provider: TranscriptionProvider) -> String? {
+        getAPIKey(accountOverride: provider.keychainAccount(baseAccount: account))
+    }
+
+    private func getAPIKey(accountOverride: String) -> String? {
+        var query = baseQuery(accountOverride: accountOverride)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
 
@@ -96,7 +114,16 @@ final class KeychainManager {
 
     /// Deletes the stored API key from the Keychain.
     func deleteAPIKey() throws {
-        let query = baseQuery()
+        try deleteAPIKey(accountOverride: account)
+    }
+
+    /// Deletes the stored API key for the given transcription provider.
+    func deleteAPIKey(for provider: TranscriptionProvider) throws {
+        try deleteAPIKey(accountOverride: provider.keychainAccount(baseAccount: account))
+    }
+
+    private func deleteAPIKey(accountOverride: String) throws {
+        let query = baseQuery(accountOverride: accountOverride)
         let status = SecItemDelete(query as CFDictionary)
 
         guard status == errSecSuccess || status == errSecItemNotFound else {
@@ -106,11 +133,11 @@ final class KeychainManager {
 
     // MARK: - Private Helpers
 
-    private func baseQuery() -> [String: Any] {
+    private func baseQuery(accountOverride: String) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account
+            kSecAttrAccount as String: accountOverride
         ]
     }
 }

@@ -307,7 +307,8 @@ final class SettingsViewModelHistoryTests: XCTestCase {
             audioRecorder: AudioRecorder(),
             soundPlayer: SoundPlayer(),
             historyManager: historyManager,
-            historyPageSize: 50
+            historyPageSize: 50,
+            loadPersistedAPIKeysOnInit: false
         )
     }
 

@@ -75,7 +75,6 @@ final class SettingsViewModel: ObservableObject {
     let loginItemManager: LoginItemManager
     let audioRecorder: AudioRecorder
     let soundPlayer: SoundPlayer
-    private let transcriptionService: GroqTranscriptionService
     private let historyManager: TranscriptionHistoryManaging?
     private let historyPageSize: Int
 
@@ -85,11 +84,10 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - Published State
 
-    /// The masked representation of the stored API key, e.g. "••••••••abcd".
-    @Published var maskedAPIKey: String = ""
+    @Published var transcriptionConfig: TranscriptionProviderConfig = .load()
 
-    /// Current validation status of the stored API key.
-    @Published var apiKeyStatus: APIKeyStatus = .notSet
+    @Published private var maskedAPIKeys: [TranscriptionProvider: String] = [:]
+    @Published private var apiKeyStatuses: [TranscriptionProvider: APIKeyStatus] = [:]
 
     /// UID of the currently selected microphone. Persisted across launches.
     @AppStorage("selectedMicrophoneUID") var selectedMicUID: String = ""
@@ -100,8 +98,8 @@ final class SettingsViewModel: ObservableObject {
     /// Temporary key entry in the "Update Key" sheet.
     @Published var pendingAPIKey: String = ""
 
-    /// Controls visibility of the API key update sheet.
-    @Published var isShowingKeySheet: Bool = false
+    /// The provider currently being edited in the API key sheet.
+    @Published var editingProvider: TranscriptionProvider?
 
     /// User-facing error message shown in alerts or inline.
     @Published var alertMessage: String?
@@ -169,7 +167,7 @@ final class SettingsViewModel: ObservableObject {
         dictationManager: DictationManager? = nil,
         historyManager: TranscriptionHistoryManaging? = nil,
         historyPageSize: Int = 50,
-        transcriptionService: GroqTranscriptionService = .shared
+        loadPersistedAPIKeysOnInit: Bool = true
     ) {
         self.keychainManager = keychainManager
         self.loginItemManager = loginItemManager
@@ -178,14 +176,15 @@ final class SettingsViewModel: ObservableObject {
         self.dictationManager = dictationManager
         self.historyManager = historyManager ?? dictationManager
         self.historyPageSize = max(1, historyPageSize)
-        self.transcriptionService = transcriptionService
 
         shortcutRecorder.onRecorded = { [weak self] binding in
             self?.currentShortcut = binding
             self?.dictationManager?.updateShortcut(binding)
         }
 
-        loadMaskedKey()
+        if loadPersistedAPIKeysOnInit {
+            loadMaskedKeys()
+        }
         refreshDevices()
         applySelectedDevice()
         bindDictationState()
@@ -194,15 +193,59 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - API Key
 
-    /// Opens the "Update Key" sheet.
-    func showUpdateKeySheet() {
-        pendingAPIKey = ""
-        alertMessage = nil
-        isShowingKeySheet = true
+    var selectedProvider: TranscriptionProvider {
+        transcriptionConfig.selectedProvider
     }
 
-    /// Tests the pending key against the Groq API, and if valid, saves it to the Keychain.
+    var selectedModel: TranscriptionModelOption {
+        transcriptionConfig.selectedModel(for: selectedProvider)
+    }
+
+    var availableModels: [TranscriptionModelOption] {
+        selectedProvider.models
+    }
+
+    var hasGroqFormattingKey: Bool {
+        !(keychainManager.getAPIKey(for: .groq)?.isEmpty ?? true)
+    }
+
+    func maskedAPIKey(for provider: TranscriptionProvider) -> String {
+        maskedAPIKeys[provider] ?? ""
+    }
+
+    func apiKeyStatus(for provider: TranscriptionProvider) -> APIKeyStatus {
+        apiKeyStatuses[provider] ?? .notSet
+    }
+
+    /// Opens the "Update Key" sheet.
+    func showUpdateKeySheet(for provider: TranscriptionProvider) {
+        pendingAPIKey = ""
+        alertMessage = nil
+        editingProvider = provider
+    }
+
+    func selectProvider(_ provider: TranscriptionProvider) {
+        guard provider != selectedProvider else { return }
+
+        var config = transcriptionConfig
+        config.selectedProvider = provider
+        transcriptionConfig = config
+        transcriptionConfig.save()
+    }
+
+    func selectModel(_ modelID: String) {
+        guard modelID != selectedModel.id else { return }
+
+        var config = transcriptionConfig
+        config.selectModel(modelID, for: selectedProvider)
+        transcriptionConfig = config
+        transcriptionConfig.save()
+    }
+
+    /// Tests the pending key against the selected provider, and if valid, saves it to the Keychain.
     func testAndSaveKey() async {
+        guard let provider = editingProvider else { return }
+
         let key = pendingAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !key.isEmpty else {
             alertMessage = "Please enter an API key."
@@ -210,20 +253,22 @@ final class SettingsViewModel: ObservableObject {
         }
 
         isTesting = true
-        apiKeyStatus = .testing
+        setAPIKeyStatus(.testing, for: provider)
         alertMessage = nil
 
         do {
-            try await transcriptionService.validateAPIKey(key)
+            let service = TranscriptionServiceFactory.service(for: provider)
+            let model = transcriptionConfig.selectedModel(for: provider)
+            try await service.validateAPIKey(key, model: model)
 
             // Validation succeeded -- persist.
-            try keychainManager.saveAPIKey(key)
-            loadMaskedKey()
-            apiKeyStatus = .valid
-            isShowingKeySheet = false
-            STTLogger.shared.info("API key updated and validated successfully")
+            try keychainManager.saveAPIKey(key, for: provider)
+            loadMaskedKeys()
+            setAPIKeyStatus(.valid, for: provider)
+            editingProvider = nil
+            STTLogger.shared.info("\(provider.displayName) API key updated and validated successfully")
         } catch {
-            apiKeyStatus = .invalid
+            setAPIKeyStatus(.invalid, for: provider)
             alertMessage = error.localizedDescription
             STTLogger.shared.warning("API key validation failed: \(error.localizedDescription)")
         }
@@ -232,16 +277,18 @@ final class SettingsViewModel: ObservableObject {
     }
 
     /// Refreshes the masked key display from the Keychain.
-    func loadMaskedKey() {
-        if let key = keychainManager.getAPIKey(), !key.isEmpty {
-            let suffix = String(key.suffix(4))
-            maskedAPIKey = String(repeating: "\u{2022}", count: 8) + suffix
-            if apiKeyStatus == .notSet {
-                apiKeyStatus = .valid
+    func loadMaskedKeys() {
+        for provider in TranscriptionProvider.allCases {
+            if let key = keychainManager.getAPIKey(for: provider), !key.isEmpty {
+                let suffix = String(key.suffix(4))
+                setMaskedAPIKey(String(repeating: "\u{2022}", count: 8) + suffix, for: provider)
+                if apiKeyStatus(for: provider) == .notSet {
+                    setAPIKeyStatus(.valid, for: provider)
+                }
+            } else {
+                setMaskedAPIKey("", for: provider)
+                setAPIKeyStatus(.notSet, for: provider)
             }
-        } else {
-            maskedAPIKey = ""
-            apiKeyStatus = .notSet
         }
     }
 
@@ -413,6 +460,18 @@ final class SettingsViewModel: ObservableObject {
         historyEntries = entries
         historyTotalCount = totalCount
         hasMoreHistory = entries.count < totalCount
+    }
+
+    private func setMaskedAPIKey(_ value: String, for provider: TranscriptionProvider) {
+        var copy = maskedAPIKeys
+        copy[provider] = value
+        maskedAPIKeys = copy
+    }
+
+    private func setAPIKeyStatus(_ status: APIKeyStatus, for provider: TranscriptionProvider) {
+        var copy = apiKeyStatuses
+        copy[provider] = status
+        apiKeyStatuses = copy
     }
 
 }

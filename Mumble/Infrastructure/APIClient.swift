@@ -1,10 +1,10 @@
 // APIClient.swift
 // Mumble
 //
-// Thin shared HTTP client for Groq API calls. Centralises bearer auth,
-// URLRequest construction, HTTP status checking, and JSON error parsing
-// so that GroqTranscriptionService and LLMFormattingService only handle
-// their service-specific request/response logic.
+// Thin shared HTTP client for Mumble's speech/formatting provider calls.
+// Centralises URLRequest construction, HTTP status checking, and JSON
+// error parsing so provider-specific services only handle their own
+// request/response details.
 
 import Foundation
 
@@ -48,12 +48,35 @@ struct APIClient {
         timeout: TimeInterval? = nil,
         body: Data? = nil
     ) -> URLRequest {
+        buildRequest(
+            url: url,
+            method: method,
+            headers: [
+                "Authorization": "Bearer \(apiKey)",
+                "Content-Type": contentType
+            ],
+            timeout: timeout,
+            body: body
+        )
+    }
+
+    /// Builds a URLRequest with fully custom headers.
+    func buildRequest(
+        url: URL,
+        method: String = "POST",
+        headers: [String: String],
+        timeout: TimeInterval? = nil,
+        body: Data? = nil
+    ) -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.timeoutInterval = timeout ?? defaultTimeout
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.setValue(contentType, forHTTPHeaderField: "Content-Type")
         request.httpBody = body
+
+        for (header, value) in headers {
+            request.setValue(value, forHTTPHeaderField: header)
+        }
+
         return request
     }
 
@@ -82,15 +105,39 @@ struct APIClient {
 
     // MARK: - Error Parsing
 
-    /// Attempts to extract a human-readable error message from a Groq/OpenAI
-    /// JSON error response: `{ "error": { "message": "..." } }`.
+    /// Attempts to extract a human-readable error message from common JSON
+    /// error response shapes such as `{ "error": { "message": "..." } }`.
     func extractErrorMessage(from data: Data) -> String? {
-        struct ErrorEnvelope: Decodable {
-            struct ErrorBody: Decodable {
-                let message: String
+        if
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        {
+            if
+                let error = json["error"] as? [String: Any],
+                let message = error["message"] as? String
+            {
+                return message
             }
-            let error: ErrorBody
+
+            if let error = json["error"] as? String {
+                return error
+            }
+
+            if
+                let detail = json["detail"] as? [String: Any],
+                let message = detail["message"] as? String
+            {
+                return message
+            }
+
+            if let detail = json["detail"] as? String {
+                return detail
+            }
+
+            if let message = json["message"] as? String {
+                return message
+            }
         }
-        return try? JSONDecoder().decode(ErrorEnvelope.self, from: data).error.message
+
+        return nil
     }
 }
