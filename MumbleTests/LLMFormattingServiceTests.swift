@@ -26,7 +26,7 @@ final class LLMFormattingServiceTests: XCTestCase {
     func testBuildRequestBody_containsModel() throws {
         let data = try service.buildRequestBody(transcript: "hello", systemPrompt: "Format")
         let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
-        XCTAssertEqual(json["model"] as? String, "llama-3.3-70b-versatile")
+        XCTAssertEqual(json["model"] as? String, "openai/gpt-oss-120b")
     }
 
     func testBuildRequestBody_containsTemperature() throws {
