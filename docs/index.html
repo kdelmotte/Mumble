@@ -9,15 +9,15 @@
   <!-- Open Graph -->
   <meta property="og:title" content="Mumble — Talk to your Mac. It types back.">
   <meta property="og:description" content="A tiny, completely free menu bar app that turns your voice into text — instantly.">
-  <meta property="og:image" content="https://kdelmotte.github.io/mumble/icon.png">
-  <meta property="og:url" content="https://kdelmotte.github.io/mumble/">
+  <meta property="og:image" content="https://kdelmotte.github.io/Mumble/icon.png">
+  <meta property="og:url" content="https://kdelmotte.github.io/Mumble/">
   <meta property="og:type" content="website">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Mumble — Talk to your Mac. It types back.">
   <meta name="twitter:description" content="A tiny, completely free menu bar app that turns your voice into text — instantly.">
-  <meta name="twitter:image" content="https://kdelmotte.github.io/mumble/icon.png">
+  <meta name="twitter:image" content="https://kdelmotte.github.io/Mumble/icon.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="icon.png">
@@ -37,7 +37,7 @@
         <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 1a1 1 0 0 1 1 1v9.586l2.293-2.293a1 1 0 1 1 1.414 1.414l-4 4a1 1 0 0 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L9 11.586V2a1 1 0 0 1 1-1ZM3 15a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1a1 1 0 0 1 1-1Z"/></svg>
         Download for macOS
       </a>
-      <p class="hero-meta">Requires macOS 14 Sonoma or later &middot; Free &amp; open source</p>
+      <p class="hero-meta">Latest signed &amp; notarized release &middot; macOS 14+ &middot; Free &amp; open source</p>
       <p class="hero-meta">After download: open the DMG and drag Mumble to Applications before first launch.</p>
     </div>
   </header>
@@ -123,25 +123,18 @@
     </div>
   </section>
 
-  <!-- Completely Free -->
+  <!-- Providers -->
   <section class="free-section">
     <div class="container">
-      <h2 class="section-title">Completely free</h2>
-      <p class="section-subtitle">Powered by <a href="https://groq.com">Groq</a>'s Whisper model — the most accurate open speech-to-text model, running at lightning speed. Groq's free tier requires no credit card.</p>
+      <h2 class="section-title">Bring your own provider</h2>
+      <p class="section-subtitle">Choose the speech-to-text service and model that fit your workflow. Mumble is free and open source; provider pricing and free tiers vary. <a href="https://groq.com">Groq</a> is an easy free starting point and also powers optional Smart Formatting with GPT-OSS 120B.</p>
 
-      <div class="limits">
-        <div class="limit-item">
-          <div class="limit-value">2,000</div>
-          <div class="limit-label">requests / day</div>
-        </div>
-        <div class="limit-item">
-          <div class="limit-value">8 hrs</div>
-          <div class="limit-label">audio / day</div>
-        </div>
-        <div class="limit-item">
-          <div class="limit-value">20</div>
-          <div class="limit-label">requests / min</div>
-        </div>
+      <div class="provider-list" aria-label="Supported transcription providers">
+        <span>Groq</span>
+        <span>Fireworks AI</span>
+        <span>ElevenLabs</span>
+        <span>Deepgram</span>
+        <span>AssemblyAI</span>
       </div>
     </div>
   </section>
@@ -155,10 +148,13 @@
           <span class="check">&#10003;</span> macOS 14 Sonoma or later
         </div>
         <div class="req-item">
-          <span class="check">&#10003;</span> Free Groq API key
+          <span class="check">&#10003;</span> API key from a supported transcription provider
         </div>
         <div class="req-item">
-          <span class="check">&#10003;</span> Microphone access
+          <span class="check">&#10003;</span> Microphone and Accessibility access
+        </div>
+        <div class="req-item">
+          <span class="check">&#10003;</span> Optional Groq key for Smart Formatting
         </div>
       </div>
     </div>

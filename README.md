@@ -15,6 +15,11 @@
 </p>
 
 <p align="center">
+  <a href="https://kdelmotte.github.io/Mumble/">Website</a> &middot;
+  <a href="https://github.com/kdelmotte/Mumble/releases/latest">Latest release</a>
+</p>
+
+<p align="center">
   <a href="https://github.com/kdelmotte/Mumble/releases/latest">
     <img src="https://img.shields.io/github/v/release/kdelmotte/Mumble?display_name=tag&style=for-the-badge&logo=apple&logoColor=white&label=Download%20for%20macOS" alt="Download for macOS" />
   </a>
@@ -52,7 +57,7 @@ If you want the easiest free setup, [Groq](https://groq.com) is still a great de
 - **Zero clutter** — lives in the menu bar, no Dock icon, no windows in your way.
 - **Guided setup** — onboarding walks you through API key, permissions, and preferences.
 - **Custom dictionary** — add vocabulary corrections so Mumble always spells your names, jargon, and brand terms the right way.
-- **Smart formatting** — an optional Groq-backed LLM pass automatically structures your dictation based on the active app (email gets greeting/body/sign-off, messaging stays casual with emoji, code preserves technical terms, and everything else gets clean punctuation). Detected from the frontmost app's bundle ID and page title; toggleable in Settings.
+- **Smart formatting** — an optional Groq GPT-OSS 120B pass automatically structures your dictation based on the active app (email gets greeting/body/sign-off, messaging stays casual with emoji, code preserves technical terms, and everything else gets clean punctuation). Detected from the frontmost app's bundle ID and page title; toggleable in Settings.
 
 ## Getting Started
 
