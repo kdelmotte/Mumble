@@ -50,7 +50,7 @@ final class LLMFormattingService {
     // MARK: - Constants
 
     private let endpoint = URL(string: "https://api.groq.com/openai/v1/chat/completions")!
-    private let model = "llama-3.3-70b-versatile"
+    private let model = "openai/gpt-oss-120b"
     private let temperature: Double = 0.1
     private let maxTokens = 1024
 
