@@ -142,6 +142,17 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
+    /// Whether completed transcriptions should remain on the clipboard after insertion.
+    @Published var isAutomaticClipboardCopyEnabled: Bool = ClipboardConfig.isAutomaticCopyEnabled {
+        didSet {
+            guard isAutomaticClipboardCopyEnabled != oldValue else { return }
+            ClipboardConfig.isAutomaticCopyEnabled = isAutomaticClipboardCopyEnabled
+            Analytics.send(.clipboardCopyToggled, parameters: [
+                "enabled": String(isAutomaticClipboardCopyEnabled)
+            ])
+        }
+    }
+
     // MARK: - Tone Config State
 
     /// The user's per-group tone mapping configuration.

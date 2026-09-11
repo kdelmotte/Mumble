@@ -50,6 +50,7 @@ enum Analytics {
         // Engagement
         case dictationCompleted       = "Dictation.completed"
         case llmFormattingToggled     = "Feature.llmFormattingToggled"
+        case clipboardCopyToggled     = "Feature.clipboardCopyToggled"
         case settingsOpened           = "Settings.opened"
 
         // Errors

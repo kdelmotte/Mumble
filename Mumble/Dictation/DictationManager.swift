@@ -425,8 +425,12 @@ final class DictationManager: ObservableObject {
             transcriptionHistoryStore.append(finalText)
             historyRevision += 1
 
-            // Insert text at the cursor position.
-            textInserter.insertText(finalText)
+            // Insert text at the cursor position. When automatic clipboard copy is
+            // enabled, the same final text remains available to paste elsewhere.
+            let clipboardPolicy: ClipboardRetentionPolicy = ClipboardConfig.isAutomaticCopyEnabled
+                ? .keepInsertedText
+                : .restorePreviousContents
+            textInserter.insertText(finalText, clipboardPolicy: clipboardPolicy)
 
             // Increment the lifetime transcription counter.
             transcriptionCount += 1

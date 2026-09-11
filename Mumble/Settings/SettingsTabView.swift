@@ -183,6 +183,16 @@ struct SettingsTabView: View {
     private var generalSection: some View {
         Section("General") {
             Toggle("Launch at login", isOn: launchAtLoginBinding)
+
+            Toggle(
+                "Copy transcriptions to clipboard",
+                isOn: $viewModel.isAutomaticClipboardCopyEnabled
+            )
+
+            Text("Leaves each completed transcription on your clipboard after inserting it. This replaces existing clipboard contents and may make the text available to clipboard managers or devices using Universal Clipboard.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
